@@ -147,6 +147,10 @@ Set the following repository secrets:
 - `PUBLIC_COGNITO_DOMAIN` = Terraform Output `cognito_domain`
 - `PUBLIC_COGNITO_CLIENT_ID` = Terraform Output `cognito_client_id`
 - `PUBLIC_COGNITO_REDIRECT_URI` = `https://trichter.me/admin`
+- `TF_BACKEND_BUCKET` = `trichter-me-terraform-state-888577064621`
+- `TF_BACKEND_KEY` = `prod/terraform.tfstate`
+- `TF_BACKEND_DYNAMODB_TABLE` = `trichter-me-terraform-locks`
+- `TF_VAR_HOSTED_ZONE_ID` = `Z04532382AA2IJOTWQEB4`
 
 ## Frontend Environment Variables
 

@@ -36,10 +36,16 @@ Serverless festival highscore app for Parookaville.
 
 ## Prerequisites
 
-- Node.js 20+
+- Node.js 24+
 - npm 10+
-- Terraform 1.6+
+- Terraform 1.15+
 - AWS CLI v2
+
+## Runtime Versions
+
+- GitHub Actions build runtime: Node.js 24
+- Local development baseline: Node.js 24+
+- AWS Lambda runtime: Node.js 22.x (latest AWS-managed Node runtime currently available)
 
 ## Local Development
 

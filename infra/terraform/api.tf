@@ -117,7 +117,7 @@ resource "aws_cloudwatch_log_group" "delete_highscore" {
 ########################################
 
 locals {
-  lambda_runtime      = "nodejs20.x"
+  lambda_runtime      = "nodejs22.x"
   lambda_architecture = "arm64"
   lambda_memory       = 256
   lambda_timeout      = 10

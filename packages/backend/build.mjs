@@ -16,11 +16,11 @@ await Promise.all(
       outfile: `dist/${handler.name}/index.mjs`,
       bundle: true,
       platform: "node",
-      target: "node20",
+      target: "node22",
       format: "esm",
       minify: true,
       sourcemap: false,
-      // AWS SDK v3 is provided by the Lambda Node.js 20 runtime.
+      // AWS SDK v3 is provided by the Lambda Node.js 22 runtime.
       // Keeping it external reduces bundle size, cost, and cold-start time.
       external: ["@aws-sdk/*"]
     })

@@ -1,0 +1,143 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="trichter.me | Parookaville Highscores">
+  <main
+    x-data="leaderboardApp()"
+    x-init="load()"
+  >
+    <section class="hero">
+      <div>
+        <h1>trichter.me</h1>
+        <p>Parookaville Highscores - Wer zieht den Trichter am schnellsten?</p>
+      </div>
+      <img
+        class="logo-placeholder"
+        src="/branding/logo-mascot.svg"
+        alt="trichter.me Logo und Maskottchen"
+      />
+    </section>
+
+    <section class="panel">
+      <h2>Leaderboard</h2>
+
+      <div class="toggle-row">
+        <template x-for="categoryOption in categories" :key="categoryOption">
+          <button
+            type="button"
+            :class="selectedCategory === categoryOption ? 'active' : ''"
+            @click="selectedCategory = categoryOption"
+            x-text="categoryOption"
+          ></button>
+        </template>
+      </div>
+
+      <div class="toggle-row">
+        <button
+          type="button"
+          :class="selectedDay === 'overall' ? 'active' : ''"
+          @click="selectedDay = 'overall'"
+        >
+          Overall Festival
+        </button>
+        <template x-for="day in festivalDays" :key="day">
+          <button
+            type="button"
+            :class="selectedDay === day ? 'active' : ''"
+            @click="selectedDay = day"
+            x-text="day"
+          ></button>
+        </template>
+      </div>
+
+      <template x-if="loading">
+        <p>Highscores werden geladen...</p>
+      </template>
+
+      <template x-if="error">
+        <p x-text="error"></p>
+      </template>
+
+      <div class="leaderboard" x-show="!loading">
+        <template x-for="(entry, idx) in visibleRows()" :key="entry.id">
+          <div class="row">
+            <span class="rank" x-text="`#${idx + 1}`"></span>
+            <img class="avatar" :src="avatarUrl(entry.pseudonym)" alt="Avatar" />
+            <div>
+              <strong x-text="entry.pseudonym"></strong>
+              <p x-text="`${entry.category} · ${entry.festival_day}`"></p>
+            </div>
+            <span class="time" x-text="`${entry.time_seconds.toFixed(3)}s`"></span>
+          </div>
+        </template>
+      </div>
+    </section>
+
+    <footer class="legal">
+      <div>
+        <h3>Impressum</h3>
+        <p>Betreiber: trichter.me Team, Beispielstraße 1, 00000 Beispielstadt, kontakt@trichter.me</p>
+      </div>
+      <div>
+        <h3>Datenschutz</h3>
+        <p>
+          Es werden keine Klarnamen oder persönlichen Profile verarbeitet. Gespeichert werden nur Pseudonym,
+          Zeit und Kategorie. Infrastrukturbedingt können bei CDN- und API-Auslieferung technische Netzwerklogs anfallen.
+        </p>
+      </div>
+    </footer>
+  </main>
+
+  <script type="module">
+    import Alpine from "alpinejs";
+
+    const API_BASE_URL = import.meta.env.PUBLIC_API_BASE_URL ?? "https://api.trichter.me";
+
+    window.leaderboardApp = function leaderboardApp() {
+      return {
+        loading: false,
+        error: "",
+        rows: [],
+        categories: ["0.33l", "0.5l", "1.0l"],
+        festivalDays: ["Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+        selectedCategory: "0.33l",
+        selectedDay: "overall",
+
+        async load() {
+          this.loading = true;
+          this.error = "";
+
+          try {
+            const response = await fetch(`${API_BASE_URL}/api/highscores`);
+            if (!response.ok) {
+              throw new Error("Highscores konnten nicht geladen werden");
+            }
+
+            const data = await response.json();
+            this.rows = data.highscores ?? [];
+          } catch (err) {
+            this.error = err instanceof Error ? err.message : "Unbekannter Fehler";
+          } finally {
+            this.loading = false;
+          }
+        },
+
+        visibleRows() {
+          return this.rows.filter((entry) => {
+            const categoryMatch = entry.category === this.selectedCategory;
+            const dayMatch = this.selectedDay === "overall" ? true : entry.festival_day === this.selectedDay;
+            return categoryMatch && dayMatch;
+          });
+        },
+
+        avatarUrl(seed) {
+          return `https://api.dicebear.com/10.x/fun-emoji/svg?seed=${encodeURIComponent(seed)}`;
+        }
+      };
+    };
+
+    window.Alpine = Alpine;
+    Alpine.start();
+  </script>
+</BaseLayout>

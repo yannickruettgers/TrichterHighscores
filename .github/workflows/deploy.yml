@@ -1,0 +1,73 @@
+name: Deploy trichter.me
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: eu-central-1
+      PUBLIC_API_BASE_URL: ${{ secrets.PUBLIC_API_BASE_URL }}
+      PUBLIC_COGNITO_DOMAIN: ${{ secrets.PUBLIC_COGNITO_DOMAIN }}
+      PUBLIC_COGNITO_CLIENT_ID: ${{ secrets.PUBLIC_COGNITO_CLIENT_ID }}
+      PUBLIC_COGNITO_REDIRECT_URI: ${{ secrets.PUBLIC_COGNITO_REDIRECT_URI }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+
+      - name: Typecheck backend
+        run: npm run typecheck
+
+      - name: Run backend tests
+        run: npm test
+
+      - name: Build backend bundles
+        run: npm run build:backend
+
+      - name: Validate Terraform
+        run: |
+          cd infra/terraform
+          terraform init -backend=false -input=false
+          terraform fmt -check -recursive
+          terraform validate
+
+      - name: Build Astro frontend
+        run: npm run build:frontend
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Sync dist to S3
+        run: |
+          aws s3 sync packages/frontend/dist/ s3://${{ secrets.FRONTEND_BUCKET_NAME }}/ --delete
+
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/*"

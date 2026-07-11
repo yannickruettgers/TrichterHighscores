@@ -1,0 +1,22 @@
+{
+  "name": "@trichter/backend",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.872.0",
+    "@aws-sdk/lib-dynamodb": "^3.872.0",
+    "@trichter/shared": "0.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "@types/aws-lambda": "^8.10.143",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.9.2",
+    "vitest": "^2.1.8"
+  }
+}

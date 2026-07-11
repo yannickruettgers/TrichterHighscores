@@ -1,0 +1,19 @@
+{
+  "name": "trichter-highscores",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:frontend": "npm --workspace @trichter/frontend run dev",
+    "build:frontend": "npm --workspace @trichter/frontend run build",
+    "build:backend": "npm --workspace @trichter/backend run build",
+    "typecheck": "npm --workspace @trichter/backend run typecheck",
+    "test": "npm --workspace @trichter/backend run test",
+    "lint": "echo \"Linting not configured yet\""
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

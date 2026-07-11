@@ -1,0 +1,259 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="trichter.me | Admin">
+  <main x-data="adminApp()" x-init="init()">
+    <section class="hero">
+      <div>
+        <h1>Admin Panel</h1>
+        <p>Geschützter Bereich für das Highscore-Management.</p>
+      </div>
+      <div class="logo-placeholder">Nur für Admins</div>
+    </section>
+
+    <section class="panel">
+      <div class="toggle-row">
+        <button type="button" @click="login()" x-show="!accessToken">Mit Cognito anmelden</button>
+        <button type="button" @click="logout()" x-show="accessToken">Logout</button>
+      </div>
+
+      <template x-if="!accessToken">
+        <p>Bitte anmelden, um Einträge zu verwalten.</p>
+      </template>
+
+      <div x-show="accessToken">
+        <h2>Highscore eintragen</h2>
+        <form @submit.prevent="createEntry()" class="form-grid">
+          <input type="text" x-model="form.pseudonym" minlength="2" maxlength="32" placeholder="Pseudonym" required />
+          <input type="number" x-model.number="form.time_seconds" step="0.001" min="0" placeholder="Zeit in Sekunden" required />
+          <select x-model="form.category" required>
+            <template x-for="category in categories" :key="category">
+              <option :value="category" x-text="category"></option>
+            </template>
+          </select>
+          <select x-model="form.festival_day" required>
+            <template x-for="day in festivalDays" :key="day">
+              <option :value="day" x-text="day"></option>
+            </template>
+          </select>
+          <button type="submit">Speichern</button>
+        </form>
+
+        <p x-text="statusMessage"></p>
+
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Pseudonym</th>
+              <th>Zeit</th>
+              <th>Aktion</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template x-for="entry in rows" :key="entry.id">
+              <tr>
+                <td x-text="entry.id"></td>
+                <td x-text="entry.pseudonym"></td>
+                <td x-text="entry.time_seconds.toFixed(3)"></td>
+                <td>
+                  <button type="button" @click="deleteEntry(entry.id)">Delete</button>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import Alpine from "alpinejs";
+
+    const API_BASE_URL = import.meta.env.PUBLIC_API_BASE_URL ?? "https://api.trichter.me";
+    const COGNITO_DOMAIN = import.meta.env.PUBLIC_COGNITO_DOMAIN ?? "";
+    const CLIENT_ID = import.meta.env.PUBLIC_COGNITO_CLIENT_ID ?? "";
+    const REDIRECT_URI = import.meta.env.PUBLIC_COGNITO_REDIRECT_URI ?? `${window.location.origin}/admin`;
+    const PKCE_VERIFIER_KEY = "trichter_admin_pkce_verifier";
+    const ACCESS_TOKEN_KEY = "trichter_admin_access_token";
+
+    function queryParam(name) {
+      const url = new URL(window.location.href);
+      return url.searchParams.get(name);
+    }
+
+    function randomString(length) {
+      const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~";
+      const randomValues = crypto.getRandomValues(new Uint8Array(length));
+      return Array.from(randomValues, (value) => alphabet[value % alphabet.length]).join("");
+    }
+
+    function base64UrlEncode(bytes) {
+      return btoa(String.fromCharCode(...bytes))
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=+$/g, "");
+    }
+
+    async function createCodeChallenge(verifier) {
+      const data = new TextEncoder().encode(verifier);
+      const digest = await crypto.subtle.digest("SHA-256", data);
+      return base64UrlEncode(new Uint8Array(digest));
+    }
+
+    async function exchangeCodeForToken(code, verifier) {
+      if (!COGNITO_DOMAIN || !CLIENT_ID) {
+        return "";
+      }
+
+      const body = new URLSearchParams({
+        grant_type: "authorization_code",
+        client_id: CLIENT_ID,
+        code,
+        redirect_uri: REDIRECT_URI,
+        code_verifier: verifier
+      });
+
+      const response = await fetch(`${COGNITO_DOMAIN}/oauth2/token`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body
+      });
+
+      if (!response.ok) {
+        throw new Error("Token exchange failed");
+      }
+
+      const data = await response.json();
+      return data.access_token ?? "";
+    }
+
+    window.adminApp = function adminApp() {
+      return {
+        accessToken: "",
+        statusMessage: "",
+        rows: [],
+        categories: ["0.33l", "0.5l", "1.0l"],
+        festivalDays: ["Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+        form: {
+          pseudonym: "",
+          time_seconds: 0,
+          category: "0.33l",
+          festival_day: "Wednesday"
+        },
+
+        async init() {
+          const existing = sessionStorage.getItem(ACCESS_TOKEN_KEY);
+          if (existing) {
+            this.accessToken = existing;
+            await this.loadRows();
+          }
+
+          const code = queryParam("code");
+          if (code) {
+            const verifier = sessionStorage.getItem(PKCE_VERIFIER_KEY);
+            if (!verifier) {
+              this.statusMessage = "PKCE-Verifier fehlt. Bitte erneut anmelden.";
+              return;
+            }
+
+            this.accessToken = await exchangeCodeForToken(code, verifier);
+            if (this.accessToken) {
+              sessionStorage.setItem(ACCESS_TOKEN_KEY, this.accessToken);
+              sessionStorage.removeItem(PKCE_VERIFIER_KEY);
+              window.history.replaceState({}, "", REDIRECT_URI);
+              await this.loadRows();
+            }
+          }
+        },
+
+        async login() {
+          if (!COGNITO_DOMAIN || !CLIENT_ID) {
+            this.statusMessage = "Cognito-Umgebungsvariablen fehlen.";
+            return;
+          }
+
+          const verifier = randomString(64);
+          const challenge = await createCodeChallenge(verifier);
+          sessionStorage.setItem(PKCE_VERIFIER_KEY, verifier);
+
+          const target = new URL(`${COGNITO_DOMAIN}/oauth2/authorize`);
+          target.searchParams.set("response_type", "code");
+          target.searchParams.set("client_id", CLIENT_ID);
+          target.searchParams.set("redirect_uri", REDIRECT_URI);
+          target.searchParams.set("scope", "openid");
+          target.searchParams.set("code_challenge_method", "S256");
+          target.searchParams.set("code_challenge", challenge);
+          window.location.href = target.toString();
+        },
+
+        logout() {
+          this.accessToken = "";
+          this.rows = [];
+          sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+          sessionStorage.removeItem(PKCE_VERIFIER_KEY);
+        },
+
+        async loadRows() {
+          const response = await fetch(`${API_BASE_URL}/api/highscores`);
+          const data = await response.json();
+          this.rows = data.highscores ?? [];
+        },
+
+        async createEntry() {
+          this.statusMessage = "";
+
+          const response = await fetch(`${API_BASE_URL}/api/highscores`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${this.accessToken}`
+            },
+            body: JSON.stringify(this.form)
+          });
+
+          if (!response.ok) {
+            if (response.status === 401 || response.status === 403) {
+              this.logout();
+              this.statusMessage = "Die Sitzung ist abgelaufen oder es fehlen Admin-Rechte.";
+              return;
+            }
+            this.statusMessage = "Eintrag konnte nicht gespeichert werden";
+            return;
+          }
+
+          this.statusMessage = "Eintrag gespeichert";
+          await this.loadRows();
+        },
+
+        async deleteEntry(id) {
+          const response = await fetch(`${API_BASE_URL}/api/highscores/${id}`, {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${this.accessToken}`
+            }
+          });
+
+          if (!response.ok) {
+            if (response.status === 401 || response.status === 403) {
+              this.logout();
+              this.statusMessage = "Die Sitzung ist abgelaufen oder es fehlen Admin-Rechte.";
+              return;
+            }
+            this.statusMessage = "Eintrag konnte nicht gelöscht werden";
+            return;
+          }
+
+          this.statusMessage = "Eintrag gelöscht";
+          await this.loadRows();
+        }
+      };
+    };
+
+    window.Alpine = Alpine;
+    Alpine.start();
+  </script>
+</BaseLayout>

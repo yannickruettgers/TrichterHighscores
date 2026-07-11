@@ -1,0 +1,16 @@
+node_modules/
+.env
+.env.*
+!.env.example
+.astro/
+.vscode/
+dist/
+coverage/
+.terraform/
+.terraform.lock.hcl
+infra/terraform/.build/
+infra/terraform/backend.hcl
+infra/terraform/terraform.tfvars
+*.tfstate
+*.tfstate.backup
+.DS_Store

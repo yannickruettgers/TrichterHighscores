@@ -1,0 +1,4 @@
+aws_region       = "eu-central-1"
+domain_name      = "trichter.me"
+hosted_zone_id   = "Z1234567890EXAMPLE"
+github_oidc_repo = "yannickruettgers/TrichterHighscores"

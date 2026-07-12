@@ -152,6 +152,18 @@ Set the following repository secrets:
 - `TF_BACKEND_DYNAMODB_TABLE` = `trichter-me-terraform-locks`
 - `TF_VAR_HOSTED_ZONE_ID` = `Z04532382AA2IJOTWQEB4`
 
+The `terraform-apply` workflow expects a protected GitHub environment named `production`.
+Configure that environment with required reviewers so every infrastructure apply needs an explicit approval before the apply job starts.
+
+There is also a manual `terraform-destroy` workflow for full stack teardown.
+It only runs from `workflow_dispatch`, requires the exact confirmation string `DESTROY_PRODUCTION`, and still waits for `production` environment approval.
+
+The Terraform plan/apply workflows also fail fast when the configured backend does not contain the expected production state.
+If that guard trips, verify `TF_BACKEND_BUCKET`, `TF_BACKEND_KEY`, `TF_BACKEND_DYNAMODB_TABLE`, and `AWS_DEPLOY_ROLE_ARN` before retrying.
+
+Important: Terraform can only destroy resources that are tracked in the configured state.
+If a failed run created duplicate resources outside that state, clean them up manually or import them into the state first.
+
 ## Frontend Environment Variables
 
 Copy `.env.example` to `.env` and set:
@@ -164,6 +176,5 @@ Copy `.env.example` to `.env` and set:
 ## Next Technical Steps
 
 - Add unit tests and API contract tests (validation, sorting/tie-breaker, admin enforcement).
-- Optionally add a separate GitHub Actions workflow for `terraform plan`/`apply`.
 - Add a custom domain (e.g. `api.trichter.me`) for the HTTP API.
 - Add frontend integration coverage for the admin auth flow and 401/403 recovery.

@@ -1,19 +1,23 @@
-name: Terraform plan
+name: Terraform destroy
 
-on:
-  pull_request:
-    paths:
-      - infra/terraform/**
-      - .github/workflows/terraform-*.yml
+'on':
+  workflow_dispatch:
+    inputs:
+      confirm_destroy:
+        description: Type DESTROY_PRODUCTION to confirm full production destroy
+        required: true
+        type: string
 
 permissions:
   id-token: write
   contents: read
-  pull-requests: write
 
 jobs:
-  terraform-plan:
+  terraform-destroy:
+    if: ${{ github.event.inputs.confirm_destroy == 'DESTROY_PRODUCTION' }}
     runs-on: ubuntu-latest
+    environment:
+      name: production
     env:
       AWS_REGION: eu-central-1
       TF_IN_AUTOMATION: true
@@ -70,45 +74,10 @@ jobs:
             exit 1
           fi
 
-      - name: Terraform fmt check
+      - name: Terraform destroy plan
         working-directory: infra/terraform
-        run: terraform fmt -check -recursive
+        run: terraform plan -destroy -input=false -out=tfdestroy
 
-      - name: Terraform validate
+      - name: Terraform destroy
         working-directory: infra/terraform
-        run: terraform validate
-
-      - name: Terraform plan
-        id: plan
-        working-directory: infra/terraform
-        run: terraform plan -no-color -input=false -out=tfplan
-
-      - name: Terraform plan text
-        id: plan-text
-        working-directory: infra/terraform
-        run: |
-          terraform show -no-color tfplan > tfplan.txt
-          {
-            echo 'plan<<EOF'
-            cat tfplan.txt
-            echo EOF
-          } >> "$GITHUB_OUTPUT"
-
-      - name: Comment plan on PR
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v8
-        with:
-          script: |
-            const body = [
-              '## Terraform plan',
-              '```text',
-              `${{ steps.plan-text.outputs.plan }}`.slice(0, 60000),
-              '```'
-            ].join('\n');
-
-            github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body
-            });
+        run: terraform apply -auto-approve -input=false tfdestroy

@@ -2,7 +2,7 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 ---
 
-<BaseLayout title="trichter.me | Parookaville Highscores">
+<BaseLayout title="trichter.me - Parookaville Edition">
   <main
     class="board-page"
     x-data="leaderboardApp()"
@@ -10,28 +10,16 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   >
     <section class="board-header">
       <div class="brand-lockup">
-        <img
-          class="brand-logo"
-          src="/branding/logo-mascot.svg"
-          alt="trichter.me Logo und Maskottchen"
-        />
+        <div class="brand-logo-shell">
+          <img
+            class="brand-logo"
+            src="/branding/logo-mascot.svg"
+            alt="trichter.me Logo und Maskottchen"
+          />
+        </div>
         <div>
           <p class="eyebrow">Parookaville</p>
           <h1>Leaderboard</h1>
-        </div>
-      </div>
-      <div class="board-meta">
-        <div class="meta-pill">
-          <span>Ansicht</span>
-          <strong x-text="selectedCategory"></strong>
-        </div>
-        <div class="meta-pill">
-          <span>Wertung</span>
-          <strong x-text="selectedDayLabel()"></strong>
-        </div>
-        <div class="meta-pill">
-          <span>Einträge</span>
-          <strong x-text="visibleRows().length"></strong>
         </div>
       </div>
     </section>
@@ -101,7 +89,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
             <template x-for="entry in podiumOrder()" :key="entry.id">
               <article class="podium-card" :class="podiumClass(entry.id)">
                 <span class="podium-rank" x-text="podiumLabel(entry.id)"></span>
-                <img class="podium-avatar" :src="avatarUrl(entry.pseudonym)") alt="Avatar" />
+                <img class="podium-avatar" :src="avatarUrl(entry.pseudonym)" alt="Avatar" />
                 <strong x-text="entry.pseudonym"></strong>
                 <p x-text="entry.festival_day"></p>
                 <span class="podium-time" x-text="`${entry.time_seconds.toFixed(3)}s`"></span>
@@ -114,7 +102,6 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       <section class="list-section" x-show="!loading && !error && visibleRows().length > 0">
         <div class="list-head">
           <h2>Alle Platzierungen</h2>
-          <p>Sortiert nach Zeit, bei Gleichstand nach älterem Eintrag.</p>
         </div>
 
         <div class="leaderboard-list">
@@ -137,7 +124,6 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     </section>
 
     <footer class="legal">
-      <p>Nur Pseudonyme, Zeiten und Kategorien. Keine Klarnamen auf dem Leaderboard.</p>
       <nav class="legal-links" aria-label="Rechtliches">
         <a href="/impressum">Impressum</a>
         <a href="/datenschutz">Datenschutz</a>

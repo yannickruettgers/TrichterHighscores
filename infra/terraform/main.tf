@@ -270,14 +270,7 @@ resource "aws_iam_policy" "deploy_policy" {
       {
         Effect = "Allow"
         Action = [
-          "s3:GetBucketLocation",
-          "s3:GetBucketVersioning",
-          "s3:GetBucketPolicy",
-          "s3:GetBucketPublicAccessBlock",
-          "s3:ListBucket",
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:DeleteObject"
+          "s3:*"
         ]
         Resource = [
           aws_s3_bucket.frontend.arn,
@@ -287,14 +280,7 @@ resource "aws_iam_policy" "deploy_policy" {
       {
         Effect = "Allow"
         Action = [
-          "s3:ListBucket",
-          "s3:GetBucketVersioning",
-          "s3:GetEncryptionConfiguration",
-          "s3:GetBucketPublicAccessBlock",
-          "s3:GetBucketPolicy",
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:DeleteObject"
+          "s3:*"
         ]
         Resource = [
           "arn:aws:s3:::trichter-me-terraform-state-${data.aws_caller_identity.current.account_id}",
@@ -304,11 +290,7 @@ resource "aws_iam_policy" "deploy_policy" {
       {
         Effect = "Allow"
         Action = [
-          "dynamodb:DescribeTable",
-          "dynamodb:GetItem",
-          "dynamodb:PutItem",
-          "dynamodb:DeleteItem",
-          "dynamodb:UpdateItem"
+          "dynamodb:*"
         ]
         Resource = [
           "arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.current.account_id}:table/trichter-me-terraform-locks",
@@ -318,19 +300,7 @@ resource "aws_iam_policy" "deploy_policy" {
       {
         Effect = "Allow"
         Action = [
-          "cloudfront:CreateInvalidation",
-          "cloudfront:GetInvalidation",
-          "cloudfront:ListInvalidations",
-          "cloudfront:CreateDistribution",
-          "cloudfront:GetDistribution",
-          "cloudfront:GetDistributionConfig",
-          "cloudfront:UpdateDistribution",
-          "cloudfront:CreateFunction",
-          "cloudfront:DescribeFunction",
-          "cloudfront:UpdateFunction",
-          "cloudfront:PublishFunction",
-          "cloudfront:DescribeFunction",
-          "cloudfront:ListFunctions"
+          "cloudfront:*"
         ]
         Resource = "*"
       },
@@ -349,27 +319,7 @@ resource "aws_iam_policy" "deploy_policy" {
       {
         Effect = "Allow"
         Action = [
-          "iam:GetRole",
-          "iam:CreateRole",
-          "iam:DeleteRole",
-          "iam:UpdateRole",
-          "iam:TagRole",
-          "iam:UntagRole",
-          "iam:AttachRolePolicy",
-          "iam:DetachRolePolicy",
-          "iam:PutRolePolicy",
-          "iam:GetRolePolicy",
-          "iam:DeleteRolePolicy",
-          "iam:CreatePolicy",
-          "iam:DeletePolicy",
-          "iam:GetPolicy",
-          "iam:GetPolicyVersion",
-          "iam:ListAttachedRolePolicies",
-          "iam:ListRolePolicies",
-          "iam:ListPolicyVersions",
-          "iam:PassRole",
-          "iam:ListOpenIDConnectProviders",
-          "iam:GetOpenIDConnectProvider"
+          "iam:*"
         ]
         Resource = "*"
       },

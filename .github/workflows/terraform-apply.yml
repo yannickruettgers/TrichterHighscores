@@ -18,8 +18,8 @@ jobs:
     env:
       AWS_REGION: eu-central-1
       TF_IN_AUTOMATION: true
-      EXPECTED_TF_BACKEND_BUCKET: trichter-tf-state-bucket
-      EXPECTED_TF_BACKEND_KEY: terraform/terraform.tfstate
+      EXPECTED_TF_BACKEND_BUCKET: trichter-me-terraform-state-888577064621
+      EXPECTED_TF_BACKEND_KEY: prod/terraform.tfstate
       EXPECTED_TF_BACKEND_DYNAMODB_TABLE: trichter-me-terraform-locks
       EXPECTED_FRONTEND_BUCKET_NAME: trichter-me-prod-frontend
       TF_VAR_aws_region: eu-central-1
@@ -123,8 +123,8 @@ jobs:
     env:
       AWS_REGION: eu-central-1
       TF_IN_AUTOMATION: true
-      EXPECTED_TF_BACKEND_BUCKET: trichter-tf-state-bucket
-      EXPECTED_TF_BACKEND_KEY: terraform/terraform.tfstate
+      EXPECTED_TF_BACKEND_BUCKET: trichter-me-terraform-state-888577064621
+      EXPECTED_TF_BACKEND_KEY: prod/terraform.tfstate
       EXPECTED_TF_BACKEND_DYNAMODB_TABLE: trichter-me-terraform-locks
       EXPECTED_FRONTEND_BUCKET_NAME: trichter-me-prod-frontend
       TF_VAR_aws_region: eu-central-1

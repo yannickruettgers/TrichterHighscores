@@ -1,5 +1,5 @@
-bucket         = "trichter-me-terraform-state-<aws-account-id>"
-key            = "prod/terraform.tfstate"
+bucket         = "trichter-tf-state-bucket"
+key            = "terraform/terraform.tfstate"
 region         = "eu-central-1"
-dynamodb_table = "trichter-me-terraform-locks"
+dynamodb_table = "your-terraform-locks-table"
 encrypt        = true

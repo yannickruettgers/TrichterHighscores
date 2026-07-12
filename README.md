@@ -83,6 +83,8 @@ terraform plan
 terraform apply
 ```
 
+If `terraform init` warns about a missing backend configuration, Terraform is falling back to a local `terraform.tfstate`. That is not the intended production setup for this repository.
+
 1. After a successful apply, note these outputs:
 	- `frontend_bucket_name`
 	- `cloudfront_distribution_id`
@@ -97,13 +99,14 @@ terraform apply
 
 Create an S3 bucket for Terraform state, for example:
 
-- `trichter-me-terraform-state-<aws-account-id>`
+- `trichter-tf-state-bucket`
 
 Recommended settings:
 
 - Block all public access
 - Enable bucket versioning
 - Enable default encryption
+- Keep bootstrap and application infrastructure in separate state keys, for example `bootstrap/terraform.tfstate` and `terraform/terraform.tfstate`
 
 ### 2. Terraform lock table
 
@@ -147,8 +150,8 @@ Set the following repository secrets:
 - `PUBLIC_COGNITO_DOMAIN` = Terraform Output `cognito_domain`
 - `PUBLIC_COGNITO_CLIENT_ID` = Terraform Output `cognito_client_id`
 - `PUBLIC_COGNITO_REDIRECT_URI` = `https://trichter.me/admin`
-- `TF_BACKEND_BUCKET` = `trichter-me-terraform-state-888577064621`
-- `TF_BACKEND_KEY` = `prod/terraform.tfstate`
+- `TF_BACKEND_BUCKET` = `trichter-tf-state-bucket`
+- `TF_BACKEND_KEY` = `terraform/terraform.tfstate`
 - `TF_BACKEND_DYNAMODB_TABLE` = `trichter-me-terraform-locks`
 - `TF_VAR_HOSTED_ZONE_ID` = `Z04532382AA2IJOTWQEB4`
 

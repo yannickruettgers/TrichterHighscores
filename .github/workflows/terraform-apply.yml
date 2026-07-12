@@ -18,6 +18,10 @@ jobs:
     env:
       AWS_REGION: eu-central-1
       TF_IN_AUTOMATION: true
+      EXPECTED_TF_BACKEND_BUCKET: trichter-tf-state-bucket
+      EXPECTED_TF_BACKEND_KEY: terraform/terraform.tfstate
+      EXPECTED_TF_BACKEND_DYNAMODB_TABLE: trichter-me-terraform-locks
+      EXPECTED_FRONTEND_BUCKET_NAME: trichter-me-prod-frontend
       TF_VAR_aws_region: eu-central-1
       TF_VAR_domain_name: trichter.me
       TF_VAR_hosted_zone_id: ${{ secrets.TF_VAR_HOSTED_ZONE_ID }}
@@ -50,6 +54,23 @@ jobs:
           role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
+      - name: Guard expected backend configuration
+        run: |
+          if [[ "${{ secrets.TF_BACKEND_BUCKET }}" != "$EXPECTED_TF_BACKEND_BUCKET" ]]; then
+            echo "TF_BACKEND_BUCKET must be set to $EXPECTED_TF_BACKEND_BUCKET"
+            exit 1
+          fi
+
+          if [[ "${{ secrets.TF_BACKEND_KEY }}" != "$EXPECTED_TF_BACKEND_KEY" ]]; then
+            echo "TF_BACKEND_KEY must be set to $EXPECTED_TF_BACKEND_KEY"
+            exit 1
+          fi
+
+          if [[ "${{ secrets.TF_BACKEND_DYNAMODB_TABLE }}" != "$EXPECTED_TF_BACKEND_DYNAMODB_TABLE" ]]; then
+            echo "TF_BACKEND_DYNAMODB_TABLE must be set to $EXPECTED_TF_BACKEND_DYNAMODB_TABLE"
+            exit 1
+          fi
+
       - name: Terraform init
         working-directory: infra/terraform
         run: |
@@ -63,11 +84,15 @@ jobs:
       - name: Guard expected remote state
         working-directory: infra/terraform
         run: |
-          terraform state list > state.txt
-
-          if ! grep -qx 'aws_s3_bucket.frontend' state.txt; then
+          if ! terraform state pull > state.json; then
             echo "Expected production Terraform state was not found in the configured backend."
             echo "Check TF_BACKEND_BUCKET, TF_BACKEND_KEY, TF_BACKEND_DYNAMODB_TABLE and AWS_DEPLOY_ROLE_ARN."
+            exit 1
+          fi
+
+          if ! grep -q '"frontend_bucket_name"' state.json || ! grep -q '"trichter-me-prod-frontend"' state.json; then
+            echo "Configured backend does not contain the expected production application state."
+            echo "Expected frontend bucket output value: $EXPECTED_FRONTEND_BUCKET_NAME"
             exit 1
           fi
 
@@ -98,6 +123,10 @@ jobs:
     env:
       AWS_REGION: eu-central-1
       TF_IN_AUTOMATION: true
+      EXPECTED_TF_BACKEND_BUCKET: trichter-tf-state-bucket
+      EXPECTED_TF_BACKEND_KEY: terraform/terraform.tfstate
+      EXPECTED_TF_BACKEND_DYNAMODB_TABLE: trichter-me-terraform-locks
+      EXPECTED_FRONTEND_BUCKET_NAME: trichter-me-prod-frontend
       TF_VAR_aws_region: eu-central-1
       TF_VAR_domain_name: trichter.me
       TF_VAR_hosted_zone_id: ${{ secrets.TF_VAR_HOSTED_ZONE_ID }}
@@ -130,6 +159,23 @@ jobs:
           role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
+      - name: Guard expected backend configuration
+        run: |
+          if [[ "${{ secrets.TF_BACKEND_BUCKET }}" != "$EXPECTED_TF_BACKEND_BUCKET" ]]; then
+            echo "TF_BACKEND_BUCKET must be set to $EXPECTED_TF_BACKEND_BUCKET"
+            exit 1
+          fi
+
+          if [[ "${{ secrets.TF_BACKEND_KEY }}" != "$EXPECTED_TF_BACKEND_KEY" ]]; then
+            echo "TF_BACKEND_KEY must be set to $EXPECTED_TF_BACKEND_KEY"
+            exit 1
+          fi
+
+          if [[ "${{ secrets.TF_BACKEND_DYNAMODB_TABLE }}" != "$EXPECTED_TF_BACKEND_DYNAMODB_TABLE" ]]; then
+            echo "TF_BACKEND_DYNAMODB_TABLE must be set to $EXPECTED_TF_BACKEND_DYNAMODB_TABLE"
+            exit 1
+          fi
+
       - name: Terraform init
         working-directory: infra/terraform
         run: |
@@ -143,11 +189,15 @@ jobs:
       - name: Guard expected remote state
         working-directory: infra/terraform
         run: |
-          terraform state list > state.txt
-
-          if ! grep -qx 'aws_s3_bucket.frontend' state.txt; then
+          if ! terraform state pull > state.json; then
             echo "Expected production Terraform state was not found in the configured backend."
             echo "Check TF_BACKEND_BUCKET, TF_BACKEND_KEY, TF_BACKEND_DYNAMODB_TABLE and AWS_DEPLOY_ROLE_ARN."
+            exit 1
+          fi
+
+          if ! grep -q '"frontend_bucket_name"' state.json || ! grep -q '"trichter-me-prod-frontend"' state.json; then
+            echo "Configured backend does not contain the expected production application state."
+            echo "Expected frontend bucket output value: $EXPECTED_FRONTEND_BUCKET_NAME"
             exit 1
           fi
 

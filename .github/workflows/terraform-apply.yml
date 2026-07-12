@@ -115,6 +115,13 @@ jobs:
           path: infra/terraform/tfplan
           if-no-files-found: error
 
+      - name: Upload Terraform build artifacts
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: terraform-apply-build-artifacts
+          path: infra/terraform/.build
+          if-no-files-found: error
+
   terraform-apply:
     needs: terraform-plan
     runs-on: ubuntu-latest
@@ -206,6 +213,12 @@ jobs:
         with:
           name: terraform-apply-plan
           path: infra/terraform
+
+      - name: Download Terraform build artifacts
+        uses: actions/download-artifact@v4.3.0
+        with:
+          name: terraform-apply-build-artifacts
+          path: infra/terraform/.build
 
       - name: Terraform apply
         working-directory: infra/terraform

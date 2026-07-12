@@ -7,8 +7,9 @@ Serverless festival highscore app for Parookaville.
 - Monorepo base structure for frontend, backend, and Terraform has been created.
 - Astro + Alpine frontend with main page and hidden admin route is scaffolded.
 - Lambda handlers for `GET /api/highscores`, `POST /api/highscores`, `DELETE /api/highscores/{id}` are implemented in TypeScript and bundled with esbuild.
-- Terraform provisions S3, CloudFront, Route53, ACM, DynamoDB, Cognito, GitHub OIDC, plus an HTTP API with Lambda integrations and a Cognito JWT authorizer.
+- Terraform provisions S3, CloudFront, Route53, ACM, DynamoDB, Cognito, GitHub OIDC, plus an HTTP API with Lambda integrations, a Cognito JWT authorizer, and the public API domain `api.trichter.me`.
 - GitHub Actions deploy workflow validates backend types/tests, validates Terraform, and deploys the frontend to S3 + CloudFront invalidation.
+- Terraform plan/apply is intended to run through GitHub Actions, guarded by a protected `production` environment.
 
 ## Security & Cost Notes
 
@@ -74,7 +75,9 @@ npm install
 npm run build:backend
 ```
 
-1. Run Terraform:
+1. Bootstrap the Terraform stack once so the GitHub OIDC deploy role exists. The preferred steady-state is GitHub-based deployment, but the very first apply cannot come from GitHub unless you create the deploy role manually in AWS first.
+
+For the pragmatic bootstrap path, run locally once:
 
 ```bash
 cd infra/terraform
@@ -83,15 +86,18 @@ terraform plan
 terraform apply
 ```
 
+After that initial bootstrap, Terraform changes should be deployed through GitHub pull requests and merges to `main`, not by repeated local applies.
+
 If `terraform init` warns about a missing backend configuration, Terraform is falling back to a local `terraform.tfstate`. That is not the intended production setup for this repository.
 
-1. After a successful apply, note these outputs:
+1. After the initial bootstrap apply, note these outputs:
 	- `frontend_bucket_name`
 	- `cloudfront_distribution_id`
 	- `github_actions_role_arn`
 	- `cognito_client_id`
 	- `cognito_domain`
 	- `api_endpoint`
+	- `api_execute_api_endpoint`
 
 ## AWS Bootstrap Details
 
@@ -122,7 +128,7 @@ Create a public hosted zone for `trichter.me` in Route53. After creation, AWS wi
 
 ### 4. Cognito admin users
 
-After the first `terraform apply`, go to Cognito:
+After the initial bootstrap apply, go to Cognito:
 
 1. Open the created user pool.
 2. Create one or more admin users.
@@ -131,13 +137,25 @@ After the first `terraform apply`, go to Cognito:
 
 ### 5. GitHub deployment access
 
-After the first `terraform apply`, add these GitHub repository secrets:
+After the initial bootstrap apply, add these GitHub repository secrets:
 
 - `AWS_DEPLOY_ROLE_ARN`
 - `FRONTEND_BUCKET_NAME`
 - `CLOUDFRONT_DISTRIBUTION_ID`
 
-The IAM OIDC role itself is created by Terraform.
+The IAM OIDC role itself is created by Terraform during bootstrap. After that point, Terraform deployments should happen through GitHub Actions.
+
+## Terraform Deployment Flow
+
+Production Terraform changes are expected to flow through GitHub:
+
+1. Open a pull request with changes under `infra/terraform/`.
+1. Let `terraform-plan.yml` run and inspect the commented plan output on the PR.
+1. Merge to `main` only after the plan looks correct.
+1. Approve the protected `production` environment when `terraform-apply.yml` requests it.
+1. Let GitHub Actions perform the production apply.
+
+Local Terraform commands are still useful for formatting, validation, debugging, or one-time bootstrap, but they should not be the routine production deployment path.
 
 ## GitHub Secrets for Deployment
 
@@ -179,5 +197,4 @@ Copy `.env.example` to `.env` and set:
 ## Next Technical Steps
 
 - Add unit tests and API contract tests (validation, sorting/tie-breaker, admin enforcement).
-- Add a custom domain (e.g. `api.trichter.me`) for the HTTP API.
 - Add frontend integration coverage for the admin auth flow and 401/403 recovery.

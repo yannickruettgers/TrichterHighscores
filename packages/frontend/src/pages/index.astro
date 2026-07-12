@@ -4,88 +4,158 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
 <BaseLayout title="trichter.me | Parookaville Highscores">
   <main
+    class="home-shell"
     x-data="leaderboardApp()"
     x-init="load()"
   >
-    <section class="hero">
-      <div>
+    <section class="home-hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Parookaville Funnel League</p>
         <h1>trichter.me</h1>
-        <p>Parookaville Highscores - Wer zieht den Trichter am schnellsten?</p>
+        <p class="hero-text">
+          Das lauteste Festival-Leaderboard für schnelle Kehlen, dumme Entscheidungen und sehr präzise Zeiten.
+        </p>
+        <div class="hero-actions">
+          <a class="hero-link primary" href="#leaderboard">Zum Ranking</a>
+          <span class="hero-note">Live aus Kategorie, Tageswertung und Overall-Festival gemischt.</span>
+        </div>
+        <div class="hero-stats" aria-label="Überblick">
+          <article>
+            <strong>3</strong>
+            <span>Kategorien</span>
+          </article>
+          <article>
+            <strong>5</strong>
+            <span>Festivaltage</span>
+          </article>
+          <article>
+            <strong x-text="rows.length"></strong>
+            <span>Einträge live</span>
+          </article>
+        </div>
       </div>
-      <img
-        class="logo-placeholder"
-        src="/branding/logo-mascot.svg"
-        alt="trichter.me Logo und Maskottchen"
-      />
+      <div class="hero-art">
+        <div class="hero-art-frame">
+          <img
+            class="hero-logo"
+            src="/branding/logo-mascot.svg"
+            alt="trichter.me Logo und Maskottchen"
+          />
+          <div class="hero-art-copy">
+            <p class="eyebrow">Official speed board</p>
+            <p>Pink, schnell, leicht chaotisch und trotzdem klar genug, um jeden Rekord sofort zu sehen.</p>
+          </div>
+        </div>
+      </div>
     </section>
 
-    <section class="panel">
-      <h2>Leaderboard</h2>
-
-      <div class="toggle-row">
-        <template x-for="categoryOption in categories" :key="categoryOption">
-          <button
-            type="button"
-            :class="selectedCategory === categoryOption ? 'active' : ''"
-            @click="selectedCategory = categoryOption"
-            x-text="categoryOption"
-          ></button>
-        </template>
+    <section class="leaderboard-shell panel" id="leaderboard">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Leaderboard</p>
+          <h2>Wer zieht am schnellsten?</h2>
+        </div>
+        <p class="section-copy">
+          Filtere nach Bechergröße und Tageswertung. Bei gleicher Zeit gewinnt der ältere Eintrag.
+        </p>
       </div>
 
-      <div class="toggle-row">
-        <button
-          type="button"
-          :class="selectedDay === 'overall' ? 'active' : ''"
-          @click="selectedDay = 'overall'"
-        >
-          Overall Festival
-        </button>
-        <template x-for="day in festivalDays" :key="day">
-          <button
-            type="button"
-            :class="selectedDay === day ? 'active' : ''"
-            @click="selectedDay = day"
-            x-text="day"
-          ></button>
-        </template>
+      <div class="filter-layout">
+        <div class="filter-block">
+          <span class="filter-label">Kategorie</span>
+          <div class="toggle-row toggle-pills">
+            <template x-for="categoryOption in categories" :key="categoryOption">
+              <button
+                type="button"
+                :class="selectedCategory === categoryOption ? 'active' : ''"
+                @click="selectedCategory = categoryOption"
+                x-text="categoryOption"
+              ></button>
+            </template>
+          </div>
+        </div>
+
+        <div class="filter-block">
+          <span class="filter-label">Wertung</span>
+          <div class="toggle-row toggle-pills secondary-pills">
+            <button
+              type="button"
+              :class="selectedDay === 'overall' ? 'active' : ''"
+              @click="selectedDay = 'overall'"
+            >
+              Overall Festival
+            </button>
+            <template x-for="day in festivalDays" :key="day">
+              <button
+                type="button"
+                :class="selectedDay === day ? 'active' : ''"
+                @click="selectedDay = day"
+                x-text="day"
+              ></button>
+            </template>
+          </div>
+        </div>
+      </div>
+
+      <div class="leaderboard-summary">
+        <p>
+          <span class="summary-label">Aktive Sicht:</span>
+          <strong x-text="selectedCategory"></strong>
+          <span>·</span>
+          <strong x-text="selectedDayLabel()"></strong>
+        </p>
+        <p>
+          <span class="summary-label">Anzahl:</span>
+          <strong x-text="visibleRows().length"></strong>
+          <span>Einträge</span>
+        </p>
       </div>
 
       <template x-if="loading">
-        <p>Highscores werden geladen...</p>
+        <div class="status-card">
+          <strong>Highscores werden geladen...</strong>
+          <p>Die aktuelle Wertung wird frisch aus der API gezogen.</p>
+        </div>
       </template>
 
       <template x-if="error">
-        <p x-text="error"></p>
+        <div class="status-card error-card">
+          <strong>Leaderboard gerade nicht erreichbar</strong>
+          <p x-text="error"></p>
+        </div>
       </template>
 
-      <div class="leaderboard" x-show="!loading">
+      <template x-if="!loading && !error && visibleRows().length === 0">
+        <div class="status-card empty-card">
+          <strong>Noch kein Eintrag in dieser Sicht</strong>
+          <p>Wechsle den Tag oder die Kategorie, um andere Festivalzeiten anzuzeigen.</p>
+        </div>
+      </template>
+
+      <div class="leaderboard" x-show="!loading && !error && visibleRows().length > 0">
         <template x-for="(entry, idx) in visibleRows()" :key="entry.id">
-          <div class="row">
-            <span class="rank" x-text="`#${idx + 1}`"></span>
+          <article class="leaderboard-row" :class="idx < 3 ? 'podium' : ''">
+            <span class="rank-badge" x-text="`#${idx + 1}`"></span>
             <img class="avatar" :src="avatarUrl(entry.pseudonym)" alt="Avatar" />
-            <div>
-              <strong x-text="entry.pseudonym"></strong>
-              <p x-text="`${entry.category} · ${entry.festival_day}`"></p>
+            <div class="row-copy">
+              <div class="row-headline">
+                <strong x-text="entry.pseudonym"></strong>
+                <span class="day-chip" x-text="entry.festival_day"></span>
+              </div>
+              <p x-text="`${entry.category} Kategorie`"></p>
             </div>
-            <span class="time" x-text="`${entry.time_seconds.toFixed(3)}s`"></span>
-          </div>
+            <span class="time-pill" x-text="`${entry.time_seconds.toFixed(3)}s`"></span>
+          </article>
         </template>
       </div>
     </section>
 
     <footer class="legal">
-      <div>
-        <h3>Impressum</h3>
-        <p>Betreiber: trichter.me Team, Beispielstraße 1, 00000 Beispielstadt, kontakt@trichter.me</p>
-      </div>
-      <div>
-        <h3>Datenschutz</h3>
-        <p>
-          Es werden keine Klarnamen oder persönlichen Profile verarbeitet. Gespeichert werden nur Pseudonym,
-          Zeit und Kategorie. Infrastrukturbedingt können bei CDN- und API-Auslieferung technische Netzwerklogs anfallen.
-        </p>
-      </div>
+      <p>Nur Pseudonyme, Zeiten und Kategorien. Keine Klarnamen auf dem Leaderboard.</p>
+      <nav class="legal-links" aria-label="Rechtliches">
+        <a href="/impressum">Impressum</a>
+        <a href="/datenschutz">Datenschutz</a>
+      </nav>
     </footer>
   </main>
 
@@ -129,6 +199,10 @@ import BaseLayout from "../layouts/BaseLayout.astro";
             const dayMatch = this.selectedDay === "overall" ? true : entry.festival_day === this.selectedDay;
             return categoryMatch && dayMatch;
           });
+        },
+
+        selectedDayLabel() {
+          return this.selectedDay === "overall" ? "Overall Festival" : this.selectedDay;
         },
 
         avatarUrl(seed) {

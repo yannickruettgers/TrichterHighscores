@@ -11,8 +11,13 @@ output "cloudfront_domain_name" {
 }
 
 output "api_endpoint" {
+  value       = "https://${aws_apigatewayv2_domain_name.api.domain_name}"
+  description = "Base URL of the public API custom domain (use as PUBLIC_API_BASE_URL)."
+}
+
+output "api_execute_api_endpoint" {
   value       = aws_apigatewayv2_api.http.api_endpoint
-  description = "Base URL of the HTTP API (use as PUBLIC_API_BASE_URL)."
+  description = "Raw execute-api endpoint for direct diagnostics."
 }
 
 output "cognito_user_pool_id" {

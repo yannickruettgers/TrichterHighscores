@@ -15,10 +15,14 @@ export async function handler(event: APIGatewayProxyEventV2WithJWTAuthorizer) {
     return jsonResponse(400, { message: "Missing path parameter: id" });
   }
 
-  await dynamo.send(new DeleteCommand({
-    TableName: tableName,
-    Key: { id }
-  }));
+  try {
+    await dynamo.send(new DeleteCommand({
+      TableName: tableName,
+      Key: { id }
+    }));
+  } catch {
+    return jsonResponse(500, { message: "Failed to delete highscore" });
+  }
 
   return emptyResponse(204);
 }

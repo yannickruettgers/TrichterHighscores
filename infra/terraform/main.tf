@@ -319,7 +319,39 @@ resource "aws_iam_policy" "deploy_policy" {
       {
         Effect = "Allow"
         Action = [
-          "iam:*"
+          "iam:AttachRolePolicy",
+          "iam:CreatePolicy",
+          "iam:CreateRole",
+          "iam:DeletePolicy",
+          "iam:DeleteRole",
+          "iam:DeleteRolePolicy",
+          "iam:DetachRolePolicy",
+          "iam:GetOpenIDConnectProvider",
+          "iam:GetPolicy",
+          "iam:GetPolicyVersion",
+          "iam:GetRole",
+          "iam:ListAttachedRolePolicies",
+          "iam:ListPolicyVersions",
+          "iam:ListRolePolicies",
+          "iam:PassRole",
+          "iam:PutRolePolicy",
+          "iam:TagPolicy",
+          "iam:TagRole",
+          "iam:UntagPolicy",
+          "iam:UntagRole",
+          "iam:UpdateAssumeRolePolicy"
+        ]
+        Resource = [
+          data.aws_iam_openid_connect_provider.github.arn,
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.prefix}-*",
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/${local.prefix}-*"
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "iam:ListPolicies",
+          "iam:ListRoles"
         ]
         Resource = "*"
       },

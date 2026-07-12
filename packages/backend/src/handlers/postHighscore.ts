@@ -16,7 +16,13 @@ export async function handler(event: APIGatewayProxyEventV2WithJWTAuthorizer) {
     return jsonResponse(400, { message: "Missing body" });
   }
 
-  const parsed = JSON.parse(event.body) as unknown;
+  let parsed: unknown;
+
+  try {
+    parsed = JSON.parse(event.body) as unknown;
+  } catch {
+    return jsonResponse(400, { message: "Invalid JSON body" });
+  }
 
   if (!isCreateHighscoreInput(parsed)) {
     return jsonResponse(422, { message: "Invalid payload" });
@@ -31,10 +37,14 @@ export async function handler(event: APIGatewayProxyEventV2WithJWTAuthorizer) {
     created_at: new Date().toISOString()
   };
 
-  await dynamo.send(new PutCommand({
-    TableName: tableName,
-    Item: item
-  }));
+  try {
+    await dynamo.send(new PutCommand({
+      TableName: tableName,
+      Item: item
+    }));
+  } catch {
+    return jsonResponse(500, { message: "Failed to create highscore" });
+  }
 
   return jsonResponse(201, item);
 }

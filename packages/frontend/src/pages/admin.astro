@@ -40,9 +40,27 @@ import BaseLayout from "../layouts/BaseLayout.astro";
           <button type="submit">Speichern</button>
         </form>
 
-        <p x-text="statusMessage"></p>
+        <template x-if="statusMessage">
+          <div class="status-card">
+            <p x-text="statusMessage"></p>
+          </div>
+        </template>
 
-        <table class="table">
+        <template x-if="loadingRows">
+          <div class="status-card">
+            <strong>Einträge werden geladen...</strong>
+            <p>Die Admin-Liste wird mit dem aktuellen Leaderboard abgeglichen.</p>
+          </div>
+        </template>
+
+        <template x-if="!loadingRows && rows.length === 0">
+          <div class="status-card empty-card">
+            <strong>Noch keine Highscores vorhanden</strong>
+            <p>Der erste gültige Eintrag erscheint danach direkt in der Tabelle.</p>
+          </div>
+        </template>
+
+        <table class="table" x-show="!loadingRows && rows.length > 0">
           <thead>
             <tr>
               <th>ID</th>
@@ -135,6 +153,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       return {
         accessToken: "",
         statusMessage: "",
+        loadingRows: false,
         rows: [],
         categories: ["0.33l", "0.5l", "1.0l"],
         festivalDays: ["Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
@@ -160,12 +179,16 @@ import BaseLayout from "../layouts/BaseLayout.astro";
               return;
             }
 
-            this.accessToken = await exchangeCodeForToken(code, verifier);
-            if (this.accessToken) {
-              sessionStorage.setItem(ACCESS_TOKEN_KEY, this.accessToken);
-              sessionStorage.removeItem(PKCE_VERIFIER_KEY);
-              window.history.replaceState({}, "", REDIRECT_URI);
-              await this.loadRows();
+            try {
+              this.accessToken = await exchangeCodeForToken(code, verifier);
+              if (this.accessToken) {
+                sessionStorage.setItem(ACCESS_TOKEN_KEY, this.accessToken);
+                sessionStorage.removeItem(PKCE_VERIFIER_KEY);
+                window.history.replaceState({}, "", REDIRECT_URI);
+                await this.loadRows();
+              }
+            } catch {
+              this.statusMessage = "Cognito-Anmeldung fehlgeschlagen. Bitte erneut anmelden.";
             }
           }
         },
@@ -198,9 +221,21 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         },
 
         async loadRows() {
-          const response = await fetch(`${API_BASE_URL}/api/highscores`);
-          const data = await response.json();
-          this.rows = data.highscores ?? [];
+          this.loadingRows = true;
+
+          try {
+            const response = await fetch(`${API_BASE_URL}/api/highscores`);
+            if (!response.ok) {
+              throw new Error("Highscores konnten nicht geladen werden");
+            }
+
+            const data = await response.json();
+            this.rows = data.highscores ?? [];
+          } catch (error) {
+            this.statusMessage = error instanceof Error ? error.message : "Highscores konnten nicht geladen werden";
+          } finally {
+            this.loadingRows = false;
+          }
         },
 
         async createEntry() {
@@ -221,6 +256,10 @@ import BaseLayout from "../layouts/BaseLayout.astro";
               this.statusMessage = "Die Sitzung ist abgelaufen oder es fehlen Admin-Rechte.";
               return;
             }
+            if (response.status === 422) {
+              this.statusMessage = "Bitte Eingaben prüfen. Kategorie, Tag und Zeitformat sind ungültig.";
+              return;
+            }
             this.statusMessage = "Eintrag konnte nicht gespeichert werden";
             return;
           }
@@ -230,6 +269,10 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         },
 
         async deleteEntry(id) {
+          if (!window.confirm("Diesen Highscore wirklich löschen?")) {
+            return;
+          }
+
           const response = await fetch(`${API_BASE_URL}/api/highscores/${id}`, {
             method: "DELETE",
             headers: {

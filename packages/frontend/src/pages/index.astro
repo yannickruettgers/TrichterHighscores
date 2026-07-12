@@ -4,61 +4,39 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
 <BaseLayout title="trichter.me | Parookaville Highscores">
   <main
-    class="home-shell"
+    class="board-page"
     x-data="leaderboardApp()"
     x-init="load()"
   >
-    <section class="home-hero">
-      <div class="hero-copy">
-        <p class="eyebrow">Parookaville Leaderboard</p>
-        <h1>trichter.me</h1>
-        <p class="hero-text">
-          Vergleiche die schnellsten Zeiten nach Kategorie und Festivaltag.
-        </p>
-        <div class="hero-actions">
-          <a class="hero-link primary" href="#leaderboard">Leaderboard ansehen</a>
-          <span class="hero-note">Öffentlich, live sortiert und nach Bechergröße filterbar.</span>
-        </div>
-        <div class="hero-stats" aria-label="Überblick">
-          <article>
-            <strong>3</strong>
-            <span>Kategorien</span>
-          </article>
-          <article>
-            <strong>5</strong>
-            <span>Festivaltage</span>
-          </article>
-          <article>
-            <strong x-text="rows.length"></strong>
-            <span>Einträge live</span>
-          </article>
+    <section class="board-header">
+      <div class="brand-lockup">
+        <img
+          class="brand-logo"
+          src="/branding/logo-mascot.svg"
+          alt="trichter.me Logo und Maskottchen"
+        />
+        <div>
+          <p class="eyebrow">Parookaville</p>
+          <h1>Leaderboard</h1>
         </div>
       </div>
-      <div class="hero-art">
-        <div class="hero-art-frame">
-          <img
-            class="hero-logo"
-            src="/branding/logo-mascot.svg"
-            alt="trichter.me Logo und Maskottchen"
-          />
-          <div class="hero-art-copy">
-            <p>Filtere nach 0.33l, 0.5l oder 1.0l und wechsle zwischen Overall- und Tageswertung.</p>
-          </div>
+      <div class="board-meta">
+        <div class="meta-pill">
+          <span>Ansicht</span>
+          <strong x-text="selectedCategory"></strong>
+        </div>
+        <div class="meta-pill">
+          <span>Wertung</span>
+          <strong x-text="selectedDayLabel()"></strong>
+        </div>
+        <div class="meta-pill">
+          <span>Einträge</span>
+          <strong x-text="visibleRows().length"></strong>
         </div>
       </div>
     </section>
 
     <section class="leaderboard-shell panel" id="leaderboard">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">Zeiten</p>
-          <h2>Leaderboard</h2>
-        </div>
-        <p class="section-copy">
-          Alle Einträge sind aufsteigend nach Zeit sortiert. Bei gleicher Zeit zählt der ältere Eintrag.
-        </p>
-      </div>
-
       <div class="filter-layout">
         <div class="filter-block">
           <span class="filter-label">Kategorie</span>
@@ -96,20 +74,6 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         </div>
       </div>
 
-      <div class="leaderboard-summary">
-        <p>
-          <span class="summary-label">Aktive Sicht:</span>
-          <strong x-text="selectedCategory"></strong>
-          <span>·</span>
-          <strong x-text="selectedDayLabel()"></strong>
-        </p>
-        <p>
-          <span class="summary-label">Anzahl:</span>
-          <strong x-text="visibleRows().length"></strong>
-          <span>Einträge</span>
-        </p>
-      </div>
-
       <template x-if="loading">
         <div class="status-card">
           <strong>Highscores werden geladen...</strong>
@@ -131,22 +95,45 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         </div>
       </template>
 
-      <div class="leaderboard" x-show="!loading && !error && visibleRows().length > 0">
-        <template x-for="(entry, idx) in visibleRows()" :key="entry.id">
-          <article class="leaderboard-row" :class="idx < 3 ? 'podium' : ''">
-            <span class="rank-badge" x-text="`#${idx + 1}`"></span>
-            <img class="avatar" :src="avatarUrl(entry.pseudonym)" alt="Avatar" />
-            <div class="row-copy">
-              <div class="row-headline">
+      <section class="podium-section" x-show="!loading && !error && topThree().length > 0">
+        <template x-if="topThree().length > 0">
+          <div class="podium-grid">
+            <template x-for="entry in podiumOrder()" :key="entry.id">
+              <article class="podium-card" :class="podiumClass(entry.id)">
+                <span class="podium-rank" x-text="podiumLabel(entry.id)"></span>
+                <img class="podium-avatar" :src="avatarUrl(entry.pseudonym)") alt="Avatar" />
                 <strong x-text="entry.pseudonym"></strong>
-                <span class="day-chip" x-text="entry.festival_day"></span>
-              </div>
-              <p x-text="`${entry.category} Kategorie`"></p>
-            </div>
-            <span class="time-pill" x-text="`${entry.time_seconds.toFixed(3)}s`"></span>
-          </article>
+                <p x-text="entry.festival_day"></p>
+                <span class="podium-time" x-text="`${entry.time_seconds.toFixed(3)}s`"></span>
+              </article>
+            </template>
+          </div>
         </template>
-      </div>
+      </section>
+
+      <section class="list-section" x-show="!loading && !error && visibleRows().length > 0">
+        <div class="list-head">
+          <h2>Alle Platzierungen</h2>
+          <p>Sortiert nach Zeit, bei Gleichstand nach älterem Eintrag.</p>
+        </div>
+
+        <div class="leaderboard-list">
+          <template x-for="(entry, idx) in visibleRows()" :key="entry.id">
+            <article class="leaderboard-row">
+              <span class="rank-badge" x-text="`#${idx + 1}`"></span>
+              <img class="avatar" :src="avatarUrl(entry.pseudonym)" alt="Avatar" />
+              <div class="row-copy">
+                <div class="row-headline">
+                  <strong x-text="entry.pseudonym"></strong>
+                  <span class="day-chip" x-text="entry.festival_day"></span>
+                </div>
+                <p x-text="`${entry.category} Kategorie`"></p>
+              </div>
+              <span class="time-pill" x-text="`${entry.time_seconds.toFixed(3)}s`"></span>
+            </article>
+          </template>
+        </div>
+      </section>
     </section>
 
     <footer class="legal">
@@ -198,6 +185,42 @@ import BaseLayout from "../layouts/BaseLayout.astro";
             const dayMatch = this.selectedDay === "overall" ? true : entry.festival_day === this.selectedDay;
             return categoryMatch && dayMatch;
           });
+        },
+
+        topThree() {
+          return this.visibleRows().slice(0, 3);
+        },
+
+        remainingRows() {
+          return this.visibleRows().slice(3);
+        },
+
+        podiumOrder() {
+          const top = this.topThree();
+          if (top.length === 1) {
+            return [top[0]];
+          }
+          if (top.length === 2) {
+            return [top[1], top[0]];
+          }
+
+          return [top[1], top[0], top[2]];
+        },
+
+        podiumLabel(id) {
+          const index = this.topThree().findIndex((entry) => entry.id === id);
+          return `#${index + 1}`;
+        },
+
+        podiumClass(id) {
+          const index = this.topThree().findIndex((entry) => entry.id === id);
+          if (index === 0) {
+            return "champion";
+          }
+          if (index === 1) {
+            return "runner-up";
+          }
+          return "third-place";
         },
 
         selectedDayLabel() {

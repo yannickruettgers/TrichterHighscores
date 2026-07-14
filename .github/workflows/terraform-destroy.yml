@@ -23,7 +23,6 @@ jobs:
       TF_IN_AUTOMATION: true
       EXPECTED_TF_BACKEND_BUCKET: trichter-me-terraform-state-888577064621
       EXPECTED_TF_BACKEND_KEY: prod/terraform.tfstate
-      EXPECTED_TF_BACKEND_DYNAMODB_TABLE: trichter-me-terraform-locks
       EXPECTED_FRONTEND_BUCKET_NAME: trichter-me-prod-frontend
       TF_VAR_aws_region: eu-central-1
       TF_VAR_domain_name: trichter.me
@@ -69,11 +68,6 @@ jobs:
             exit 1
           fi
 
-          if [[ "${{ secrets.TF_BACKEND_DYNAMODB_TABLE }}" != "$EXPECTED_TF_BACKEND_DYNAMODB_TABLE" ]]; then
-            echo "TF_BACKEND_DYNAMODB_TABLE must be set to $EXPECTED_TF_BACKEND_DYNAMODB_TABLE"
-            exit 1
-          fi
-
       - name: Terraform init
         working-directory: infra/terraform
         run: |
@@ -81,7 +75,7 @@ jobs:
             -backend-config="bucket=${{ secrets.TF_BACKEND_BUCKET }}" \
             -backend-config="key=${{ secrets.TF_BACKEND_KEY }}" \
             -backend-config="region=${{ env.AWS_REGION }}" \
-            -backend-config="dynamodb_table=${{ secrets.TF_BACKEND_DYNAMODB_TABLE }}" \
+            -backend-config="use_lockfile=true" \
             -backend-config="encrypt=true"
 
       - name: Guard expected remote state
@@ -89,7 +83,7 @@ jobs:
         run: |
           if ! terraform state pull > state.json; then
             echo "Expected production Terraform state was not found in the configured backend."
-            echo "Check TF_BACKEND_BUCKET, TF_BACKEND_KEY, TF_BACKEND_DYNAMODB_TABLE and AWS_DEPLOY_ROLE_ARN."
+            echo "Check TF_BACKEND_BUCKET, TF_BACKEND_KEY and AWS_DEPLOY_ROLE_ARN."
             exit 1
           fi
 

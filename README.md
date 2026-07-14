@@ -196,7 +196,6 @@ Set the following repository secrets:
 - `PUBLIC_COGNITO_REDIRECT_URI` = `https://yourdomain/admin`
 - `TF_BACKEND_BUCKET` = `your-terraform-state-bucket`
 - `TF_BACKEND_KEY` = `prod/terraform.tfstate`
-- `TF_BACKEND_DYNAMODB_TABLE` = `your-terraform-lock-table`
 - `TF_VAR_HOSTED_ZONE_ID` = `Z1234567890EXAMPLE`
 
 The `terraform-apply` workflow expects a protected GitHub environment named `production`.
@@ -206,7 +205,7 @@ There is also a manual `terraform-destroy` workflow for full stack teardown.
 It only runs from `workflow_dispatch`, requires the exact confirmation string `DESTROY_PRODUCTION`, and still waits for `production` environment approval.
 
 The Terraform plan/apply workflows also fail fast when the configured backend does not contain the expected production state.
-If that guard trips, verify `TF_BACKEND_BUCKET`, `TF_BACKEND_KEY`, `TF_BACKEND_DYNAMODB_TABLE`, and `AWS_DEPLOY_ROLE_ARN` before retrying.
+If that guard trips, verify `TF_BACKEND_BUCKET`, `TF_BACKEND_KEY`, and `AWS_DEPLOY_ROLE_ARN` before retrying.
 
 Important: Terraform can only destroy resources that are tracked in the configured state.
 If a failed run created duplicate resources outside that state, clean them up manually or import them into the state first.

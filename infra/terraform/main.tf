@@ -266,13 +266,14 @@ resource "aws_iam_policy" "deploy_policy" {
 
   # This role is trusted only by the configured GitHub repository through OIDC.
   # IAM access is deliberately read-only so this role cannot modify its own IAM
-  # policy, trust relationship, or role permissions. The only IAM write-like
-  # action is a restricted PassRole permission needed when Lambda is created or
-  # its execution role is assigned.
+  # policy, trust relationship, or role permissions. The only exceptions are a
+  # restricted PassRole for Lambda execution roles and creation of API Gateway's
+  # AWS-managed service-linked role.
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
+        Sid    = "TerraformManagedServices"
         Effect = "Allow"
         Action = [
           "s3:*",
@@ -289,6 +290,7 @@ resource "aws_iam_policy" "deploy_policy" {
         Resource = "*"
       },
       {
+        Sid    = "IamReadOnly"
         Effect = "Allow"
         Action = [
           "iam:Get*",
@@ -297,6 +299,7 @@ resource "aws_iam_policy" "deploy_policy" {
         Resource = "*"
       },
       {
+        Sid    = "TagReadOnly"
         Effect = "Allow"
         Action = [
           "tag:Get*"
@@ -304,6 +307,7 @@ resource "aws_iam_policy" "deploy_policy" {
         Resource = "*"
       },
       {
+        Sid    = "PassExistingLambdaRolesOnly"
         Effect = "Allow"
         Action = [
           "iam:PassRole"
@@ -317,9 +321,29 @@ resource "aws_iam_policy" "deploy_policy" {
             "iam:PassedToService" = "lambda.amazonaws.com"
           }
         }
+      },
+      {
+        Sid    = "CreateApiGatewayServiceLinkedRoleOnly"
+        Effect = "Allow"
+        Action = [
+          "iam:CreateServiceLinkedRole"
+        ]
+        Resource = "arn:aws:iam::*:role/aws-service-role/ops.apigateway.amazonaws.com/*"
+        Condition = {
+          StringEquals = {
+            "iam:AWSServiceName" = "ops.apigateway.amazonaws.com"
+          }
+        }
       }
     ]
   })
+
+  # This policy is attached to the role executing Terraform. Altering it from
+  # that role would allow self-escalation, so IAM policy changes are a reviewed
+  # bootstrap operation performed with an administrator role instead.
+  lifecycle {
+    ignore_changes = [policy]
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "deploy_attach" {

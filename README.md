@@ -228,7 +228,7 @@ Use `https://yourdomain/admin` as the generic redirect shape and configure the e
 - Admin audit data: the Cognito access-token username that created a new score; it is returned only by the protected admin listing route and shown only in the protected admin page.
 - Browser storage: PKCE verifier and access token in `sessionStorage`; no application `localStorage`, first-party cookies, advertising, or analytics.
 - Infrastructure: ordinary request/connection metadata may be processed by AWS CloudFront, API Gateway, Lambda, Cognito, and CloudWatch. Lambda logs are retained for 14 days; explicit CloudFront/API access logs are not configured.
-- Avatars: DiceBear receives the pseudonym in the avatar URL and ordinary connection metadata.
+- Avatars: DiceBear Adventurer Neutral avatars are generated locally in the browser from a normalized pseudonym. No avatar request, IP address, or pseudonym is sent to DiceBear. The generated SVG metadata attributes the Adventurer Neutral design to Lisa Wischofsky under CC BY 4.0; the DiceBear code is MIT-licensed.
 - PayPal: no PayPal resource is embedded. Data is sent to PayPal only after a visitor follows the external support link.
 - Retention: DynamoDB highscore data has no automatic expiry and remains until administrative deletion.
 
@@ -237,5 +237,4 @@ See the in-app Datenschutz page for the complete technical draft. Its legal base
 ## Next Technical Steps
 
 - Add browser-level integration coverage for the complete Cognito callback, 401/403 recovery, create, and delete flow.
-- Consider self-hosting generated avatars to avoid the public DiceBear request.
 - Review the Datenschutz draft with qualified legal counsel before treating it as final legal advice.

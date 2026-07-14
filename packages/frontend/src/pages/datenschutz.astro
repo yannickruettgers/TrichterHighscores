@@ -14,9 +14,10 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
     <section class="panel">
       <p><strong>Stand: 14. Juli 2026</strong></p>
-      <p>Diese Hinweise beschreiben die derzeit technisch festgestellte Datenverarbeitung auf trichter.me. Die rechtliche Einordnung, insbesondere Rechtsgrundlagen, Auftragsverarbeitung und internationale Übermittlungen, sollte vor Veröffentlichung juristisch geprüft werden.</p>
+      <p>Mit den folgenden Hinweisen informieren wir Sie über die Verarbeitung personenbezogener Daten im Rahmen der Nutzung von trichter.me.</p>
 
       <h2>1. Verantwortlicher</h2>
+      <p>Verantwortlich für die Datenverarbeitung auf dieser Website im Sinne der Datenschutz-Grundverordnung (DSGVO) ist:</p>
       <address class="address">
         Yannick-Luca Ruettgers<br />
         Wallstraße 26<br />
@@ -26,34 +27,40 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       </address>
 
       <h2>2. Öffentliche Highscores</h2>
-      <p>Für einen Highscore werden eine frei gewählte Bezeichnung (Pseudonym), die gemessene Zeit, Kategorie, Festivaltag, Erzielungszeitpunkt, technischer Datensatzbezeichner und Erfassungszeitpunkt gespeichert. Diese Angaben sind – mit Ausnahme interner Audit-Angaben – öffentlich im Leaderboard abrufbar. Ein Pseudonym kann trotz fehlendem Klarnamen personenbezogen sein, wenn es einer Person zugeordnet werden kann.</p>
-      <p>Die Verarbeitung dient dem Betrieb und der Darstellung des Festival-Leaderboards. Als vorgesehene Rechtsgrundlage kommt das berechtigte Interesse gemäß Art. 6 Abs. 1 lit. f DSGVO an der Bereitstellung und Integrität des Angebots in Betracht. Diese Einordnung ist rechtlich zu prüfen.</p>
-      <p>Highscore-Datensätze werden derzeit auf unbestimmte Zeit gespeichert, bis sie durch einen Administrator gelöscht werden. Berichtigungs- oder Löschanfragen können an die oben genannte E-Mail-Adresse gerichtet werden.</p>
+      <p>Für einen Eintrag in das Leaderboard werden eine frei gewählte Bezeichnung (Pseudonym), die gemessene Zeit, die Kategorie, der Festivaltag, der Erzielungszeitpunkt, ein technischer Datensatzbezeichner und der Erfassungszeitpunkt gespeichert. Diese Angaben sind – mit Ausnahme interner Audit-Angaben – öffentlich im Leaderboard abrufbar. Ein Pseudonym kann trotz fehlendem Klarnamen personenbezogen sein, wenn es einer Person zugeordnet werden kann.</p>
+      <p>Rechtsgrundlage für diese Verarbeitung ist unser berechtigtes Interesse (Art. 6 Abs. 1 lit. f DSGVO) an der Bereitstellung, dem Betrieb und der Integrität des Festival-Leaderboards.</p>
+      <p>Highscore-Datensätze werden auf unbestimmte Zeit gespeichert, bis sie durch einen Administrator gelöscht werden. Berichtigungs- oder Löschanfragen können jederzeit an die oben genannte E-Mail-Adresse gerichtet werden.</p>
 
       <h2>3. Administration und Anmeldung</h2>
-      <p>Der geschützte Administrationsbereich verwendet Amazon Cognito. Für neue Einträge wird der Benutzername aus dem verifizierten Cognito-Zugriffstoken des handelnden Administrators als Audit-Angabe gespeichert und nur im Administrationsbereich angezeigt. Cognito verarbeitet außerdem die zur Anmeldung eingerichteten Kontodaten. Die Speicherung dient der Zugriffskontrolle und Nachvollziehbarkeit von Änderungen.</p>
-      <p>Im Browser werden der kurzlebige PKCE-Verifier und das Zugriffstoken im <code>sessionStorage</code> gespeichert. Diese Daten gelten nur für den jeweiligen Tab beziehungsweise die Browsersitzung und werden beim Logout entfernt. Die Anwendung verwendet kein <code>localStorage</code>.</p>
+      <p>Der geschützte Administrationsbereich verwendet den Dienst Amazon Cognito. Für neue Einträge wird der Benutzername aus dem verifizierten Cognito-Zugriffstoken des handelnden Administrators als Audit-Angabe gespeichert und nur im internen Administrationsbereich angezeigt. Cognito verarbeitet außerdem die zur Anmeldung eingerichteten Kontodaten. Die Speicherung dient der Zugriffskontrolle und der Nachvollziehbarkeit von Änderungen.</p>
+      <p>Im Browser werden der kurzlebige PKCE-Verifier und das Zugriffstoken im <code>sessionStorage</code> gespeichert. Diese Daten gelten nur für den jeweiligen Tab beziehungsweise die aktuelle Browsersitzung und werden beim Logout entfernt. Die Anwendung verwendet keinen <code>localStorage</code>.</p>
 
       <h2>4. Cookies und Reichweitenmessung</h2>
-      <p>Die trichter.me-Anwendung setzt nach aktuellem technischen Stand keine eigenen Cookies ein. Es werden keine Analyse-, Werbe- oder Trackingdienste verwendet. Die Cognito-Anmeldeseite kann auf ihrer eigenen Domain technisch notwendige Cookies für den Authentifizierungsvorgang setzen.</p>
+      <p>Die trichter.me-Anwendung setzt keine eigenen Cookies ein. Es werden keine externen Analyse-, Werbe- oder Trackingdienste wie beispielsweise Google Analytics verwendet. Lediglich die Cognito-Anmeldeseite für Administratoren kann auf ihrer eigenen Domain technisch notwendige Cookies für den Authentifizierungsvorgang setzen.</p>
 
       <h2>5. Hosting, Auslieferung und Protokolle</h2>
-      <p>Die Anwendung wird über Dienste von Amazon Web Services (AWS) betrieben, insbesondere S3, CloudFront, API Gateway, Lambda, DynamoDB und Cognito. Dabei können technisch notwendige Verbindungsdaten wie IP-Adresse, Zeitpunkt, aufgerufene Ressource, Browserkennung sowie Fehler- und Anfragemetadaten verarbeitet werden. Die Kerninfrastruktur und Datenbank liegen in der AWS-Region Frankfurt (eu-central-1); CloudFront arbeitet als globales Auslieferungsnetz.</p>
-      <p>Für die Lambda-Funktionen bestehen CloudWatch-Fehlerprotokolle mit einer Aufbewahrungsdauer von 14 Tagen. Eine gesonderte CloudFront- oder API-Gateway-Zugriffsprotokollierung ist derzeit nicht aktiviert. Die technische Verarbeitung dient Sicherheit, Fehleranalyse und zuverlässiger Bereitstellung; als vorgesehene Rechtsgrundlage kommt Art. 6 Abs. 1 lit. f DSGVO in Betracht.</p>
+      <p>Die Anwendung wird über Dienste von Amazon Web Services (AWS) betrieben. Hierzu zählen insbesondere S3, CloudFront, API Gateway, Lambda, DynamoDB und Cognito. Bei der Nutzung der Anwendung werden technisch notwendige Verbindungsdaten, zum Beispiel IP-Adresse, Zeitpunkt, aufgerufene Ressource, Browserkennung sowie Fehler- und Anfragemetadaten, verarbeitet.</p>
+      <p>Die Kerninfrastruktur und die Datenbank liegen in der AWS-Region Frankfurt (eu-central-1). CloudFront arbeitet als globales Auslieferungsnetz (Content Delivery Network). Für die Lambda-Funktionen bestehen CloudWatch-Protokolle mit einer konfigurierten Aufbewahrungsdauer von 14 Tagen. Eine gesonderte CloudFront- oder API-Gateway-Zugriffsprotokollierung ist nicht aktiviert.</p>
+      <p>Die technische Verarbeitung dient der Sicherheit, Fehleranalyse und der zuverlässigen Bereitstellung der Anwendung. Rechtsgrundlage hierfür ist unser berechtigtes Interesse gemäß Art. 6 Abs. 1 lit. f DSGVO.</p>
+      <p>Um die datenschutzkonforme Verarbeitung zu gewährleisten, haben wir mit AWS einen Vertrag zur Auftragsverarbeitung gemäß Art. 28 DSGVO abgeschlossen.</p>
 
-      <h2>6. Externe Inhalte und Links</h2>
-      <p>Avatare werden beim externen Dienst DiceBear abgerufen. Dafür wird das Pseudonym als Bestandteil der Avatar-URL an DiceBear übertragen; zusätzlich fallen dort übliche Verbindungsdaten wie die IP-Adresse an. Dadurch kann eine Verarbeitung außerhalb der Europäischen Union nicht ausgeschlossen werden. Als datenschutzfreundlichere Alternative sollte geprüft werden, die Avatar-Grafiken selbst zu hosten.</p>
-      <p>Der Link „Buy me a beer“ führt zu PayPal. Beim bloßen Aufruf von trichter.me wird kein PayPal-Inhalt geladen. Daten werden erst an PayPal übertragen, wenn der Link aktiv geöffnet wird. Dann gelten die Datenschutzhinweise von PayPal.</p>
+      <h2>6. Externe Links und Inhalte</h2>
+      <p><strong>Avatare:</strong> Die auf der Website angezeigten Avatare werden mit einer in die Anwendung eingebundenen DiceBear-Software lokal im Browser generiert. Es findet dabei keine Übertragung von Nutzerdaten wie IP-Adressen oder Pseudonymen an DiceBear oder andere externe Avatar-Anbieter statt.</p>
+      <p><strong>Spenden-Link (PayPal):</strong> Auf unserer Seite befindet sich ein „Buy me a beer“-Link, der zu PayPal führt. Beim bloßen Aufruf von trichter.me werden keine Daten an PayPal übertragen. Erst wenn Sie den Link aktiv anklicken, werden Sie zu PayPal weitergeleitet, wodurch Daten wie Ihre IP-Adresse dorthin übermittelt werden. Dort gelten die Datenschutzbestimmungen von PayPal.</p>
 
-      <h2>7. Empfänger und Drittlandübermittlungen</h2>
-      <p>Empfänger können AWS als Hosting- und Authentifizierungsdienstleister sowie DiceBear und – nur nach Anklicken des Links – PayPal sein. CloudFront und externe Anbieter können Daten weltweit verarbeiten. Ob und auf welcher Grundlage Drittlandübermittlungen stattfinden, einschließlich EU-Standardvertragsklauseln, Angemessenheitsbeschlüssen und ergänzenden Maßnahmen, muss anhand der abgeschlossenen Verträge und aktuellen Anbieterinformationen rechtlich verifiziert werden.</p>
+      <h2>7. Datenübermittlung in Drittländer</h2>
+      <p>Da Amazon Web Services (AWS) ein US-amerikanischer Konzern ist, kann es bei der Bereitstellung der globalen Infrastruktur, zum Beispiel durch das CloudFront CDN, zu einer Datenübermittlung in die USA oder andere Drittländer kommen.</p>
+      <p>AWS gibt an, nach dem EU-U.S. Data Privacy Framework (DPF) zertifiziert zu sein. Für Übermittlungen an hierunter zertifizierte US-Unternehmen besteht ein Angemessenheitsbeschluss der EU-Kommission gemäß Art. 45 DSGVO. Soweit Daten in andere Länder ohne Angemessenheitsbeschluss übertragen werden, stützt AWS solche Übermittlungen nach eigenen Angaben unter anderem auf die von der EU-Kommission genehmigten Standardvertragsklauseln (SCC), die Bestandteil des Auftragsverarbeitungsvertrages sind.</p>
 
       <h2>8. Rechte betroffener Personen</h2>
-      <p>Betroffene Personen haben im Rahmen der gesetzlichen Voraussetzungen insbesondere Rechte auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung und Datenübertragbarkeit. Einer Verarbeitung auf Grundlage berechtigter Interessen kann aus Gründen der besonderen Situation widersprochen werden. Eine erteilte Einwilligung kann jederzeit für die Zukunft widerrufen werden.</p>
-      <p>Außerdem besteht das Recht, sich bei einer Datenschutzaufsichtsbehörde zu beschweren. Zuständig kann insbesondere die Landesbeauftragte für Datenschutz und Informationsfreiheit Nordrhein-Westfalen sein.</p>
+      <p>Sie haben im Rahmen der geltenden gesetzlichen Voraussetzungen das Recht auf unentgeltliche <strong>Auskunft</strong> über Ihre gespeicherten personenbezogenen Daten, deren Herkunft und Empfänger sowie den Zweck der Datenverarbeitung. Weiterhin haben Sie ein Recht auf <strong>Berichtigung</strong>, <strong>Einschränkung der Verarbeitung</strong> oder <strong>Löschung</strong> dieser Daten sowie das Recht auf <strong>Datenübertragbarkeit</strong>.</p>
+      <p><strong>Widerspruchsrecht:</strong> Einer Verarbeitung auf Grundlage unserer berechtigten Interessen (Art. 6 Abs. 1 lit. f DSGVO) können Sie aus Gründen, die sich aus Ihrer besonderen Situation ergeben, jederzeit widersprechen.</p>
+      <p>Eine gegebenenfalls erteilte Einwilligung kann jederzeit für die Zukunft widerrufen werden.</p>
+      <p>Zudem steht Ihnen ein <strong>Beschwerderecht</strong> bei einer zuständigen Datenschutzaufsichtsbehörde zu. Zuständig kann insbesondere die Landesbeauftragte für Datenschutz und Informationsfreiheit Nordrhein-Westfalen (LDI NRW) sein.</p>
 
-      <h2>9. Sicherheit und Änderungen</h2>
-      <p>Die Übertragung erfolgt verschlüsselt über HTTPS. Schreib- und Löschzugriffe sind durch Cognito-Anmeldung, Gruppenprüfung und eingeschränkte AWS-Berechtigungen geschützt. Diese Hinweise werden angepasst, wenn sich Funktionen, Anbieter, Speicherfristen oder Rechtsgrundlagen ändern.</p>
+      <h2>9. Datensicherheit</h2>
+      <p>Wir verwenden für die Übertragung von Daten eine TLS-Verschlüsselung (HTTPS), um Ihre Daten vor dem Zugriff Dritter zu schützen. Schreib- und Löschzugriffe in der Datenbank sind durch die Cognito-Anmeldung, Gruppenprüfungen und das IAM-Rollenkonzept mit eingeschränkten AWS-Berechtigungen abgesichert.</p>
+      <p>Wir behalten uns vor, diese Datenschutzerklärung anzupassen, damit sie den aktuellen rechtlichen Anforderungen entspricht oder um Änderungen unserer Leistungen in der Datenschutzerklärung umzusetzen.</p>
     </section>
   </main>
 </BaseLayout>

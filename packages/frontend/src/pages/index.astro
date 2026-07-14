@@ -42,20 +42,20 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         </fieldset>
       </div>
 
-      <div class="status-card" x-show="loading" role="status">
+      <div class="status-card" x-show="loading" x-cloak role="status">
         <strong>Highscores werden geladen...</strong>
         <p>Die aktuelle Wertung wird frisch aus der API gezogen.</p>
       </div>
-      <div class="status-card error-card" x-show="error" role="alert">
+      <div class="status-card error-card" x-show="error" x-cloak role="alert">
         <strong>Leaderboard gerade nicht erreichbar</strong>
         <p x-text="error"></p>
       </div>
-      <div class="status-card empty-card" x-show="!loading && !error && visibleRows().length === 0">
+      <div class="status-card empty-card" x-show="!loading && !error && visibleRows().length === 0" x-cloak>
         <strong>Noch kein Eintrag in dieser Sicht</strong>
         <p>Wechsle den Tag oder die Kategorie, um andere Festivalzeiten anzuzeigen.</p>
       </div>
 
-      <section class="podium-section" x-show="!loading && !error && topThree().length > 0" aria-labelledby="podium-title">
+      <section class="podium-section" x-show="!loading && !error && topThree().length > 0" x-cloak aria-labelledby="podium-title">
         <h2 id="podium-title" class="section-title">Podium</h2>
         <div class="podium-grid">
           <template x-for="(entry, index) in topThree()" :key="entry.id">
@@ -70,7 +70,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         </div>
       </section>
 
-      <section class="list-section" x-show="!loading && !error && visibleRows().length > 0" aria-labelledby="all-ranks-title">
+      <section class="list-section" x-show="!loading && !error && visibleRows().length > 0" x-cloak aria-labelledby="all-ranks-title">
         <div class="list-head">
           <div>
             <p class="eyebrow">Jeder Versuch zählt</p>
@@ -99,9 +99,8 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
     <aside class="beer-card panel" aria-labelledby="beer-title">
       <div>
-        <p class="eyebrow">Support the Harbor</p>
+        <p class="eyebrow">Support the Dose</p>
         <h2 id="beer-title">Buy me a beer</h2>
-        <p>Wenn dir das Leaderboard gefällt, geht das nächste Festivalbier auf dich.</p>
       </div>
       <a class="button-link button-primary" href="https://www.paypal.me/yannickruettgers" target="_blank" rel="noopener noreferrer">Bier ausgeben</a>
     </aside>
@@ -111,7 +110,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         <a href="/impressum">Impressum</a>
         <a href="/datenschutz">Datenschutz</a>
       </nav>
-      <p>Neon Harbor · Parookaville Edition</p>
+      <p>trichter.me · Parookaville Edition</p>
     </footer>
   </main>
 

@@ -3,7 +3,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 ---
 
 <BaseLayout title="trichter.me | Admin">
-  <main class="admin-page" x-data="adminApp()" x-init="init()">
+  <main class="admin-page" x-data="adminApp()">
     <div class="neon-splash" aria-hidden="true"></div>
 
     <header class="board-header">
@@ -12,7 +12,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
           <img class="brand-logo" src="/branding/logo-mascot.svg" alt="trichter.me Maskottchen" />
         </div>
         <div>
-          <p class="eyebrow">Neon Harbor Control</p>
+          <p class="eyebrow">Parookaville</p>
           <h1>Admin Panel</h1>
         </div>
       </div>
@@ -26,32 +26,31 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         <p class="muted">Einträge sind nach der Anmeldung mit deinem Cognito-Benutzernamen nachvollziehbar.</p>
       </div>
       <div class="admin-actions">
-        <button class="button-primary" type="button" @click="login()" x-show="!accessToken">Mit Cognito anmelden</button>
-        <button type="button" @click="logout()" x-show="accessToken">Logout</button>
+        <button class="button-primary" type="button" @click="login()" x-show="!accessToken" x-cloak>Mit Cognito anmelden</button>
+        <button type="button" @click="logout()" x-show="accessToken" x-cloak>Logout</button>
       </div>
     </section>
 
-    <div class="status-card" x-show="statusMessage" :class="statusIsError ? 'error-card' : ''" aria-live="polite">
+    <div class="status-card" x-show="statusMessage" x-cloak :class="statusIsError ? 'error-card' : ''" aria-live="polite">
       <p x-text="statusMessage"></p>
     </div>
 
-    <section class="panel" x-show="!accessToken">
+    <section class="panel" x-show="!accessToken" x-cloak>
       <p>Bitte melde dich an, um Einträge anzulegen oder zu löschen.</p>
     </section>
 
-    <div class="admin-content" x-show="accessToken">
+    <div class="admin-content" x-show="accessToken" x-cloak>
       <section class="panel" aria-labelledby="create-title">
         <div class="section-heading">
           <div>
             <p class="eyebrow">Neuer Versuch</p>
-            <h2 id="create-title">Highscore eintragen</h2>
+            <h2 id="create-title">Neuer Eintrag</h2>
           </div>
-          <p class="muted">Erzielungszeit und Festivaltag können unabhängig angepasst werden.</p>
         </div>
 
         <form @submit.prevent="createEntry()" class="form-grid">
           <div class="form-field">
-            <label for="pseudonym">Pseudonym</label>
+            <label for="pseudonym">Name</label>
             <input id="pseudonym" type="text" x-model="form.pseudonym" minlength="2" maxlength="32" autocomplete="off" required />
           </div>
           <div class="form-field">
@@ -66,14 +65,13 @@ import BaseLayout from "../layouts/BaseLayout.astro";
           </div>
           <div class="form-field">
             <label for="festival-day">Festivaltag</label>
-            <select id="festival-day" x-model="form.festival_day" @change="dayWasEdited = true" required>
+            <select id="festival-day" x-model="form.festival_day" @change="syncDateFromFestivalDay()" required>
               <template x-for="day in festivalDays" :key="day"><option :value="day" x-text="dayLabel(day)"></option></template>
             </select>
           </div>
           <div class="form-field form-field-wide">
             <label for="achieved-at">Erzielt am (Europe/Berlin)</label>
-            <input id="achieved-at" type="datetime-local" x-model="form.achieved_local" @change="suggestFestivalDay()" step="60" required />
-            <small>Wird als eindeutiger ISO-Zeitpunkt gespeichert.</small>
+            <input id="achieved-at" type="datetime-local" x-model="form.achieved_local" @change="syncFestivalDayFromDate()" step="60" required />
           </div>
           <div class="form-submit">
             <button class="button-primary" type="submit" :disabled="saving" x-text="saving ? 'Wird gespeichert…' : 'Highscore speichern'"></button>
@@ -90,20 +88,20 @@ import BaseLayout from "../layouts/BaseLayout.astro";
           <span class="count-chip" x-text="`${rows.length} Einträge`"></span>
         </div>
 
-        <div class="status-card" x-show="loadingRows" role="status">
+        <div class="status-card" x-show="loadingRows" x-cloak role="status">
           <strong>Einträge werden geladen...</strong>
         </div>
-        <div class="status-card empty-card" x-show="!loadingRows && rows.length === 0">
+        <div class="status-card empty-card" x-show="!loadingRows && rows.length === 0" x-cloak>
           <strong>Noch keine Highscores vorhanden</strong>
         </div>
 
-        <div class="table-wrap" x-show="!loadingRows && rows.length > 0">
+        <div class="table-wrap" x-show="!loadingRows && rows.length > 0" x-cloak>
           <table class="table">
-            <thead><tr><th>Pseudonym</th><th>Zeit</th><th>Kategorie</th><th>Tag</th><th>Erzielt</th><th>Erfasst</th><th>Admin</th><th>Aktion</th></tr></thead>
+            <thead><tr><th>Name</th><th>Zeit</th><th>Kategorie</th><th>Tag</th><th>Erzielt</th><th>Erfasst</th><th>Admin</th><th>Aktion</th></tr></thead>
             <tbody>
               <template x-for="entry in rows" :key="entry.id">
                 <tr>
-                  <td data-label="Pseudonym" x-text="entry.pseudonym"></td>
+                  <td data-label="Name" x-text="entry.pseudonym"></td>
                   <td data-label="Zeit" x-text="`${entry.time_seconds.toFixed(3)}s`"></td>
                   <td data-label="Kategorie" x-text="entry.category"></td>
                   <td data-label="Tag" x-text="dayLabel(entry.festival_day)"></td>
@@ -122,7 +120,8 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
   <script type="module">
     import Alpine from "alpinejs";
-    import { berlinDateTimeLocalToIso, festivalDayForLocalDateTime, formatBerlinDateTimeLocal } from "../lib/berlinTime";
+    import { berlinDateTimeLocalToIso, festivalDayForLocalDateTime, formatBerlinDateTimeLocal, moveLocalDateTimeToFestivalDay } from "../lib/berlinTime";
+    import { exchangeCodeForToken, readCognitoCallback } from "../lib/cognitoAuth";
 
     const API_BASE_URL = import.meta.env.PUBLIC_API_BASE_URL ?? "https://api.trichter.me";
     const COGNITO_DOMAIN = import.meta.env.PUBLIC_COGNITO_DOMAIN ?? "";
@@ -131,10 +130,6 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     const PKCE_VERIFIER_KEY = "trichter_admin_pkce_verifier";
     const ACCESS_TOKEN_KEY = "trichter_admin_access_token";
     const DAY_LABELS = { Wednesday: "Mittwoch", Thursday: "Donnerstag", Friday: "Freitag", Saturday: "Samstag", Sunday: "Sonntag" };
-
-    function queryParam(name) {
-      return new URL(window.location.href).searchParams.get(name);
-    }
 
     function randomString(length) {
       const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~";
@@ -151,14 +146,6 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       return base64UrlEncode(new Uint8Array(digest));
     }
 
-    async function exchangeCodeForToken(code, verifier) {
-      if (!COGNITO_DOMAIN || !CLIENT_ID) return "";
-      const body = new URLSearchParams({ grant_type: "authorization_code", client_id: CLIENT_ID, code, redirect_uri: REDIRECT_URI, code_verifier: verifier });
-      const response = await fetch(`${COGNITO_DOMAIN}/oauth2/token`, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body });
-      if (!response.ok) throw new Error("Token exchange failed");
-      return (await response.json()).access_token ?? "";
-    }
-
     window.adminApp = function adminApp() {
       return {
         accessToken: "",
@@ -167,7 +154,6 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         loadingRows: false,
         saving: false,
         deletingId: "",
-        dayWasEdited: false,
         rows: [],
         categories: ["0.33l", "0.5l", "1.0l"],
         festivalDays: ["Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
@@ -175,41 +161,71 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
         async init() {
           this.resetForm();
-          const existing = sessionStorage.getItem(ACCESS_TOKEN_KEY);
-          if (existing) {
-            this.accessToken = existing;
-            await this.loadRows();
+          const callback = readCognitoCallback(window.location.href);
+          if (callback.error) {
+            window.history.replaceState({}, "", window.location.pathname);
+            sessionStorage.removeItem(PKCE_VERIFIER_KEY);
+            this.setStatus("Cognito-Anmeldung wurde abgebrochen oder abgelehnt.", true);
+            return;
           }
-          const code = queryParam("code");
-          if (!code) return;
+          if (!callback.code) {
+            const existing = sessionStorage.getItem(ACCESS_TOKEN_KEY);
+            if (existing) {
+              this.accessToken = existing;
+              await this.loadRows();
+            }
+            return;
+          }
+
           const verifier = sessionStorage.getItem(PKCE_VERIFIER_KEY);
+          window.history.replaceState({}, "", window.location.pathname);
           if (!verifier) {
             this.setStatus("PKCE-Verifier fehlt. Bitte erneut anmelden.", true);
             return;
           }
           try {
-            this.accessToken = await exchangeCodeForToken(code, verifier);
-            if (this.accessToken) {
-              sessionStorage.setItem(ACCESS_TOKEN_KEY, this.accessToken);
-              sessionStorage.removeItem(PKCE_VERIFIER_KEY);
-              window.history.replaceState({}, "", new URL(REDIRECT_URI).pathname);
-              await this.loadRows();
-            }
-          } catch {
-            this.setStatus("Cognito-Anmeldung fehlgeschlagen. Bitte erneut anmelden.", true);
+            this.accessToken = await exchangeCodeForToken(callback.code, verifier, {
+              domain: COGNITO_DOMAIN,
+              clientId: CLIENT_ID,
+              redirectUri: REDIRECT_URI
+            });
+            sessionStorage.setItem(ACCESS_TOKEN_KEY, this.accessToken);
+            sessionStorage.removeItem(PKCE_VERIFIER_KEY);
+          } catch (error) {
+            sessionStorage.removeItem(PKCE_VERIFIER_KEY);
+            this.setStatus(error instanceof Error ? error.message : "Cognito-Anmeldung fehlgeschlagen. Bitte erneut anmelden.", true);
+            return;
           }
+          await this.loadRows();
         },
 
         resetForm() {
           const localNow = formatBerlinDateTimeLocal();
-          this.form = { pseudonym: "", time_seconds: "", category: "0.33l", festival_day: festivalDayForLocalDateTime(localNow) ?? "Wednesday", achieved_local: localNow };
-          this.dayWasEdited = false;
+          const festivalDay = festivalDayForLocalDateTime(localNow) ?? "Wednesday";
+          const achievedLocal = festivalDayForLocalDateTime(localNow)
+            ? localNow
+            : moveLocalDateTimeToFestivalDay(localNow, festivalDay) ?? localNow;
+          this.form = { pseudonym: "", time_seconds: "", category: "0.33l", festival_day: festivalDay, achieved_local: achievedLocal };
         },
 
-        suggestFestivalDay() {
-          if (this.dayWasEdited) return;
+        syncFestivalDayFromDate() {
           const suggested = festivalDayForLocalDateTime(this.form.achieved_local);
-          if (suggested) this.form.festival_day = suggested;
+          if (suggested) {
+            this.form.festival_day = suggested;
+            this.setStatus("");
+          } else {
+            this.setStatus("Bitte ein Datum von Mittwoch bis Sonntag wählen.", true);
+          }
+        },
+
+        syncDateFromFestivalDay() {
+          const adjusted = moveLocalDateTimeToFestivalDay(this.form.achieved_local, this.form.festival_day);
+          if (adjusted) {
+            this.form.achieved_local = adjusted;
+            this.setStatus("");
+          } else {
+            this.setStatus("Bitte zuerst eine gültige Erzielungszeit wählen.", true);
+          }
         },
 
         setStatus(message, isError = false) {
@@ -218,6 +234,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         },
 
         async login() {
+          this.setStatus("");
           if (!COGNITO_DOMAIN || !CLIENT_ID) {
             this.setStatus("Cognito-Umgebungsvariablen fehlen.", true);
             return;
@@ -259,6 +276,11 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         },
 
         async createEntry() {
+          const festivalDay = festivalDayForLocalDateTime(this.form.achieved_local);
+          if (!festivalDay || festivalDay !== this.form.festival_day) {
+            this.setStatus("Festivaltag und Erzielungsdatum stimmen nicht überein.", true);
+            return;
+          }
           const achievedAt = berlinDateTimeLocalToIso(this.form.achieved_local);
           if (!achievedAt) {
             this.setStatus("Bitte eine gültige Berliner Erzielungszeit wählen. Zeiten in der übersprungenen DST-Stunde sind ungültig.", true);

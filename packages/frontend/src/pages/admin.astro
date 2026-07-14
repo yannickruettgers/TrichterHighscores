@@ -3,91 +3,126 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 ---
 
 <BaseLayout title="trichter.me | Admin">
-  <main x-data="adminApp()" x-init="init()">
-    <section class="hero">
-      <div>
-        <h1>Admin Panel</h1>
-        <p>Geschützter Bereich für das Highscore-Management.</p>
-      </div>
-      <div class="logo-placeholder">Nur für Admins</div>
-    </section>
+  <main class="admin-page" x-data="adminApp()" x-init="init()">
+    <div class="neon-splash" aria-hidden="true"></div>
 
-    <section class="panel">
-      <div class="toggle-row">
-        <button type="button" @click="login()" x-show="!accessToken">Mit Cognito anmelden</button>
+    <header class="board-header">
+      <div class="brand-lockup">
+        <div class="brand-logo-shell brand-logo-shell-small">
+          <img class="brand-logo" src="/branding/logo-mascot.svg" alt="trichter.me Maskottchen" />
+        </div>
+        <div>
+          <p class="eyebrow">Neon Harbor Control</p>
+          <h1>Admin Panel</h1>
+        </div>
+      </div>
+      <a class="button-link" href="/">Zurück zum Leaderboard</a>
+    </header>
+
+    <section class="panel admin-auth" aria-labelledby="access-title">
+      <div>
+        <p class="eyebrow">Geschützter Bereich</p>
+        <h2 id="access-title">Highscores verwalten</h2>
+        <p class="muted">Einträge sind nach der Anmeldung mit deinem Cognito-Benutzernamen nachvollziehbar.</p>
+      </div>
+      <div class="admin-actions">
+        <button class="button-primary" type="button" @click="login()" x-show="!accessToken">Mit Cognito anmelden</button>
         <button type="button" @click="logout()" x-show="accessToken">Logout</button>
       </div>
-
-      <template x-if="!accessToken">
-        <p>Bitte anmelden, um Einträge zu verwalten.</p>
-      </template>
-
-      <div x-show="accessToken">
-        <h2>Highscore eintragen</h2>
-        <form @submit.prevent="createEntry()" class="form-grid">
-          <input type="text" x-model="form.pseudonym" minlength="2" maxlength="32" placeholder="Pseudonym" required />
-          <input type="number" x-model.number="form.time_seconds" step="0.001" min="0" placeholder="Zeit in Sekunden" required />
-          <select x-model="form.category" required>
-            <template x-for="category in categories" :key="category">
-              <option :value="category" x-text="category"></option>
-            </template>
-          </select>
-          <select x-model="form.festival_day" required>
-            <template x-for="day in festivalDays" :key="day">
-              <option :value="day" x-text="day"></option>
-            </template>
-          </select>
-          <button type="submit">Speichern</button>
-        </form>
-
-        <template x-if="statusMessage">
-          <div class="status-card">
-            <p x-text="statusMessage"></p>
-          </div>
-        </template>
-
-        <template x-if="loadingRows">
-          <div class="status-card">
-            <strong>Einträge werden geladen...</strong>
-            <p>Die Admin-Liste wird mit dem aktuellen Leaderboard abgeglichen.</p>
-          </div>
-        </template>
-
-        <template x-if="!loadingRows && rows.length === 0">
-          <div class="status-card empty-card">
-            <strong>Noch keine Highscores vorhanden</strong>
-            <p>Der erste gültige Eintrag erscheint danach direkt in der Tabelle.</p>
-          </div>
-        </template>
-
-        <table class="table" x-show="!loadingRows && rows.length > 0">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Pseudonym</th>
-              <th>Zeit</th>
-              <th>Aktion</th>
-            </tr>
-          </thead>
-          <tbody>
-            <template x-for="entry in rows" :key="entry.id">
-              <tr>
-                <td x-text="entry.id"></td>
-                <td x-text="entry.pseudonym"></td>
-                <td x-text="entry.time_seconds.toFixed(3)"></td>
-                <td>
-                  <button type="button" @click="deleteEntry(entry.id)">Delete</button>
-                </td>
-              </tr>
-            </template>
-          </tbody>
-        </table>
-      </div>
     </section>
+
+    <div class="status-card" x-show="statusMessage" :class="statusIsError ? 'error-card' : ''" aria-live="polite">
+      <p x-text="statusMessage"></p>
+    </div>
+
+    <section class="panel" x-show="!accessToken">
+      <p>Bitte melde dich an, um Einträge anzulegen oder zu löschen.</p>
+    </section>
+
+    <div class="admin-content" x-show="accessToken">
+      <section class="panel" aria-labelledby="create-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Neuer Versuch</p>
+            <h2 id="create-title">Highscore eintragen</h2>
+          </div>
+          <p class="muted">Erzielungszeit und Festivaltag können unabhängig angepasst werden.</p>
+        </div>
+
+        <form @submit.prevent="createEntry()" class="form-grid">
+          <div class="form-field">
+            <label for="pseudonym">Pseudonym</label>
+            <input id="pseudonym" type="text" x-model="form.pseudonym" minlength="2" maxlength="32" autocomplete="off" required />
+          </div>
+          <div class="form-field">
+            <label for="score-time">Zeit in Sekunden</label>
+            <input id="score-time" type="number" x-model.number="form.time_seconds" step="0.001" min="0.001" inputmode="decimal" placeholder="1.234" required />
+          </div>
+          <div class="form-field">
+            <label for="category">Kategorie</label>
+            <select id="category" x-model="form.category" required>
+              <template x-for="category in categories" :key="category"><option :value="category" x-text="category"></option></template>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="festival-day">Festivaltag</label>
+            <select id="festival-day" x-model="form.festival_day" @change="dayWasEdited = true" required>
+              <template x-for="day in festivalDays" :key="day"><option :value="day" x-text="dayLabel(day)"></option></template>
+            </select>
+          </div>
+          <div class="form-field form-field-wide">
+            <label for="achieved-at">Erzielt am (Europe/Berlin)</label>
+            <input id="achieved-at" type="datetime-local" x-model="form.achieved_local" @change="suggestFestivalDay()" step="60" required />
+            <small>Wird als eindeutiger ISO-Zeitpunkt gespeichert.</small>
+          </div>
+          <div class="form-submit">
+            <button class="button-primary" type="submit" :disabled="saving" x-text="saving ? 'Wird gespeichert…' : 'Highscore speichern'"></button>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel" aria-labelledby="entries-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Audit Log</p>
+            <h2 id="entries-title">Gespeicherte Einträge</h2>
+          </div>
+          <span class="count-chip" x-text="`${rows.length} Einträge`"></span>
+        </div>
+
+        <div class="status-card" x-show="loadingRows" role="status">
+          <strong>Einträge werden geladen...</strong>
+        </div>
+        <div class="status-card empty-card" x-show="!loadingRows && rows.length === 0">
+          <strong>Noch keine Highscores vorhanden</strong>
+        </div>
+
+        <div class="table-wrap" x-show="!loadingRows && rows.length > 0">
+          <table class="table">
+            <thead><tr><th>Pseudonym</th><th>Zeit</th><th>Kategorie</th><th>Tag</th><th>Erzielt</th><th>Erfasst</th><th>Admin</th><th>Aktion</th></tr></thead>
+            <tbody>
+              <template x-for="entry in rows" :key="entry.id">
+                <tr>
+                  <td data-label="Pseudonym" x-text="entry.pseudonym"></td>
+                  <td data-label="Zeit" x-text="`${entry.time_seconds.toFixed(3)}s`"></td>
+                  <td data-label="Kategorie" x-text="entry.category"></td>
+                  <td data-label="Tag" x-text="dayLabel(entry.festival_day)"></td>
+                  <td data-label="Erzielt" x-text="formatDate(entry.achieved_at ?? entry.created_at)"></td>
+                  <td data-label="Erfasst" x-text="formatDate(entry.created_at)"></td>
+                  <td data-label="Admin" x-text="entry.created_by ?? 'Unbekannt'"></td>
+                  <td data-label="Aktion"><button class="danger-button" type="button" :disabled="deletingId === entry.id" @click="deleteEntry(entry.id)" x-text="deletingId === entry.id ? 'Löscht…' : 'Löschen'"></button></td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
   </main>
 
   <script type="module">
     import Alpine from "alpinejs";
+    import { berlinDateTimeLocalToIso, festivalDayForLocalDateTime, formatBerlinDateTimeLocal } from "../lib/berlinTime";
 
     const API_BASE_URL = import.meta.env.PUBLIC_API_BASE_URL ?? "https://api.trichter.me";
     const COGNITO_DOMAIN = import.meta.env.PUBLIC_COGNITO_DOMAIN ?? "";
@@ -95,10 +130,10 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     const REDIRECT_URI = import.meta.env.PUBLIC_COGNITO_REDIRECT_URI ?? `${window.location.origin}/admin`;
     const PKCE_VERIFIER_KEY = "trichter_admin_pkce_verifier";
     const ACCESS_TOKEN_KEY = "trichter_admin_access_token";
+    const DAY_LABELS = { Wednesday: "Mittwoch", Thursday: "Donnerstag", Friday: "Freitag", Saturday: "Samstag", Sunday: "Sonntag" };
 
     function queryParam(name) {
-      const url = new URL(window.location.href);
-      return url.searchParams.get(name);
+      return new URL(window.location.href).searchParams.get(name);
     }
 
     function randomString(length) {
@@ -108,108 +143,94 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     }
 
     function base64UrlEncode(bytes) {
-      return btoa(String.fromCharCode(...bytes))
-        .replace(/\+/g, "-")
-        .replace(/\//g, "_")
-        .replace(/=+$/g, "");
+      return btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
     }
 
     async function createCodeChallenge(verifier) {
-      const data = new TextEncoder().encode(verifier);
-      const digest = await crypto.subtle.digest("SHA-256", data);
+      const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier));
       return base64UrlEncode(new Uint8Array(digest));
     }
 
     async function exchangeCodeForToken(code, verifier) {
-      if (!COGNITO_DOMAIN || !CLIENT_ID) {
-        return "";
-      }
-
-      const body = new URLSearchParams({
-        grant_type: "authorization_code",
-        client_id: CLIENT_ID,
-        code,
-        redirect_uri: REDIRECT_URI,
-        code_verifier: verifier
-      });
-
-      const response = await fetch(`${COGNITO_DOMAIN}/oauth2/token`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body
-      });
-
-      if (!response.ok) {
-        throw new Error("Token exchange failed");
-      }
-
-      const data = await response.json();
-      return data.access_token ?? "";
+      if (!COGNITO_DOMAIN || !CLIENT_ID) return "";
+      const body = new URLSearchParams({ grant_type: "authorization_code", client_id: CLIENT_ID, code, redirect_uri: REDIRECT_URI, code_verifier: verifier });
+      const response = await fetch(`${COGNITO_DOMAIN}/oauth2/token`, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body });
+      if (!response.ok) throw new Error("Token exchange failed");
+      return (await response.json()).access_token ?? "";
     }
 
     window.adminApp = function adminApp() {
       return {
         accessToken: "",
         statusMessage: "",
+        statusIsError: false,
         loadingRows: false,
+        saving: false,
+        deletingId: "",
+        dayWasEdited: false,
         rows: [],
         categories: ["0.33l", "0.5l", "1.0l"],
         festivalDays: ["Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
-        form: {
-          pseudonym: "",
-          time_seconds: 0,
-          category: "0.33l",
-          festival_day: "Wednesday"
-        },
+        form: { pseudonym: "", time_seconds: "", category: "0.33l", festival_day: "Wednesday", achieved_local: "" },
 
         async init() {
+          this.resetForm();
           const existing = sessionStorage.getItem(ACCESS_TOKEN_KEY);
           if (existing) {
             this.accessToken = existing;
             await this.loadRows();
           }
-
           const code = queryParam("code");
-          if (code) {
-            const verifier = sessionStorage.getItem(PKCE_VERIFIER_KEY);
-            if (!verifier) {
-              this.statusMessage = "PKCE-Verifier fehlt. Bitte erneut anmelden.";
-              return;
-            }
-
-            try {
-              this.accessToken = await exchangeCodeForToken(code, verifier);
-              if (this.accessToken) {
-                sessionStorage.setItem(ACCESS_TOKEN_KEY, this.accessToken);
-                sessionStorage.removeItem(PKCE_VERIFIER_KEY);
-                window.history.replaceState({}, "", REDIRECT_URI);
-                await this.loadRows();
-              }
-            } catch {
-              this.statusMessage = "Cognito-Anmeldung fehlgeschlagen. Bitte erneut anmelden.";
-            }
+          if (!code) return;
+          const verifier = sessionStorage.getItem(PKCE_VERIFIER_KEY);
+          if (!verifier) {
+            this.setStatus("PKCE-Verifier fehlt. Bitte erneut anmelden.", true);
+            return;
           }
+          try {
+            this.accessToken = await exchangeCodeForToken(code, verifier);
+            if (this.accessToken) {
+              sessionStorage.setItem(ACCESS_TOKEN_KEY, this.accessToken);
+              sessionStorage.removeItem(PKCE_VERIFIER_KEY);
+              window.history.replaceState({}, "", new URL(REDIRECT_URI).pathname);
+              await this.loadRows();
+            }
+          } catch {
+            this.setStatus("Cognito-Anmeldung fehlgeschlagen. Bitte erneut anmelden.", true);
+          }
+        },
+
+        resetForm() {
+          const localNow = formatBerlinDateTimeLocal();
+          this.form = { pseudonym: "", time_seconds: "", category: "0.33l", festival_day: festivalDayForLocalDateTime(localNow) ?? "Wednesday", achieved_local: localNow };
+          this.dayWasEdited = false;
+        },
+
+        suggestFestivalDay() {
+          if (this.dayWasEdited) return;
+          const suggested = festivalDayForLocalDateTime(this.form.achieved_local);
+          if (suggested) this.form.festival_day = suggested;
+        },
+
+        setStatus(message, isError = false) {
+          this.statusMessage = message;
+          this.statusIsError = isError;
         },
 
         async login() {
           if (!COGNITO_DOMAIN || !CLIENT_ID) {
-            this.statusMessage = "Cognito-Umgebungsvariablen fehlen.";
+            this.setStatus("Cognito-Umgebungsvariablen fehlen.", true);
             return;
           }
-
           const verifier = randomString(64);
-          const challenge = await createCodeChallenge(verifier);
           sessionStorage.setItem(PKCE_VERIFIER_KEY, verifier);
-
           const target = new URL(`${COGNITO_DOMAIN}/oauth2/authorize`);
           target.searchParams.set("response_type", "code");
           target.searchParams.set("client_id", CLIENT_ID);
           target.searchParams.set("redirect_uri", REDIRECT_URI);
           target.searchParams.set("scope", "openid");
           target.searchParams.set("code_challenge_method", "S256");
-          target.searchParams.set("code_challenge", challenge);
+          target.searchParams.set("code_challenge", await createCodeChallenge(verifier));
           window.location.href = target.toString();
         },
 
@@ -222,76 +243,84 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
         async loadRows() {
           this.loadingRows = true;
-
           try {
-            const response = await fetch(`${API_BASE_URL}/api/highscores`);
-            if (!response.ok) {
-              throw new Error("Highscores konnten nicht geladen werden");
+            const response = await fetch(`${API_BASE_URL}/api/admin/highscores`, { headers: { Authorization: `Bearer ${this.accessToken}` } });
+            if (response.status === 401 || response.status === 403) {
+              this.logout();
+              throw new Error("Die Sitzung ist abgelaufen oder es fehlen Admin-Rechte.");
             }
-
-            const data = await response.json();
-            this.rows = data.highscores ?? [];
+            if (!response.ok) throw new Error("Highscores konnten nicht geladen werden");
+            this.rows = (await response.json()).highscores ?? [];
           } catch (error) {
-            this.statusMessage = error instanceof Error ? error.message : "Highscores konnten nicht geladen werden";
+            this.setStatus(error instanceof Error ? error.message : "Highscores konnten nicht geladen werden", true);
           } finally {
             this.loadingRows = false;
           }
         },
 
         async createEntry() {
-          this.statusMessage = "";
-
-          const response = await fetch(`${API_BASE_URL}/api/highscores`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${this.accessToken}`
-            },
-            body: JSON.stringify(this.form)
-          });
-
-          if (!response.ok) {
-            if (response.status === 401 || response.status === 403) {
-              this.logout();
-              this.statusMessage = "Die Sitzung ist abgelaufen oder es fehlen Admin-Rechte.";
-              return;
-            }
-            if (response.status === 422) {
-              this.statusMessage = "Bitte Eingaben prüfen. Kategorie, Tag und Zeitformat sind ungültig.";
-              return;
-            }
-            this.statusMessage = "Eintrag konnte nicht gespeichert werden";
+          const achievedAt = berlinDateTimeLocalToIso(this.form.achieved_local);
+          if (!achievedAt) {
+            this.setStatus("Bitte eine gültige Berliner Erzielungszeit wählen. Zeiten in der übersprungenen DST-Stunde sind ungültig.", true);
             return;
           }
-
-          this.statusMessage = "Eintrag gespeichert";
-          await this.loadRows();
+          this.saving = true;
+          this.setStatus("");
+          try {
+            const response = await fetch(`${API_BASE_URL}/api/highscores`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${this.accessToken}` },
+              body: JSON.stringify({ pseudonym: this.form.pseudonym, time_seconds: Number(this.form.time_seconds), category: this.form.category, festival_day: this.form.festival_day, achieved_at: achievedAt })
+            });
+            if (response.status === 401 || response.status === 403) {
+              this.logout();
+              this.setStatus("Die Sitzung ist abgelaufen oder es fehlen Admin-Rechte.", true);
+              return;
+            }
+            if (!response.ok) {
+              this.setStatus(response.status === 422 ? "Bitte alle Eingaben und Zeitformate prüfen." : "Eintrag konnte nicht gespeichert werden.", true);
+              return;
+            }
+            this.setStatus("Eintrag gespeichert.");
+            this.resetForm();
+            await this.loadRows();
+          } catch {
+            this.setStatus("Eintrag konnte wegen eines Netzwerkfehlers nicht gespeichert werden.", true);
+          } finally {
+            this.saving = false;
+          }
         },
 
         async deleteEntry(id) {
-          if (!window.confirm("Diesen Highscore wirklich löschen?")) {
-            return;
-          }
-
-          const response = await fetch(`${API_BASE_URL}/api/highscores/${id}`, {
-            method: "DELETE",
-            headers: {
-              Authorization: `Bearer ${this.accessToken}`
-            }
-          });
-
-          if (!response.ok) {
+          if (this.deletingId || !window.confirm("Diesen Highscore wirklich löschen?")) return;
+          this.deletingId = id;
+          try {
+            const response = await fetch(`${API_BASE_URL}/api/highscores/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${this.accessToken}` } });
             if (response.status === 401 || response.status === 403) {
               this.logout();
-              this.statusMessage = "Die Sitzung ist abgelaufen oder es fehlen Admin-Rechte.";
+              this.setStatus("Die Sitzung ist abgelaufen oder es fehlen Admin-Rechte.", true);
               return;
             }
-            this.statusMessage = "Eintrag konnte nicht gelöscht werden";
-            return;
+            if (!response.ok) {
+              this.setStatus("Eintrag konnte nicht gelöscht werden.", true);
+              return;
+            }
+            this.setStatus("Eintrag gelöscht.");
+            await this.loadRows();
+          } catch {
+            this.setStatus("Eintrag konnte wegen eines Netzwerkfehlers nicht gelöscht werden.", true);
+          } finally {
+            this.deletingId = "";
           }
+        },
 
-          this.statusMessage = "Eintrag gelöscht";
-          await this.loadRows();
+        dayLabel(day) {
+          return DAY_LABELS[day] ?? day;
+        },
+
+        formatDate(value) {
+          const date = new Date(value);
+          return Number.isNaN(date.getTime()) ? "Unbekannt" : new Intl.DateTimeFormat("de-DE", { timeZone: "Europe/Berlin", dateStyle: "short", timeStyle: "short" }).format(date);
         }
       };
     };

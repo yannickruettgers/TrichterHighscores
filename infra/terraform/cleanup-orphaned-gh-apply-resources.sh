@@ -6,9 +6,9 @@ PROFILE="${AWS_PROFILE:-${1:-trichter-me-bootstrap}}"
 AWS_PAGER=""
 export AWS_PAGER
 
-API_ID="j6dlf0ko6c"
-USER_POOL_ID="eu-central-1_U7nqYuVzi"
-CERT_ARN="arn:aws:acm:us-east-1:888577064621:certificate/6d0ae5e2-de08-4506-bf1c-db08ac402e3f"
+: "${API_ID:?Set API_ID to the orphaned HTTP API ID}"
+: "${USER_POOL_ID:?Set USER_POOL_ID to the orphaned Cognito user pool ID}"
+: "${CERT_ARN:?Set CERT_ARN to the orphaned ACM certificate ARN}"
 
 log() {
   printf '%s\n' "$*"

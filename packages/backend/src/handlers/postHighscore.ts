@@ -5,7 +5,7 @@ import type { HighscoreRecord } from "../../../shared/src/types.js";
 import { dynamo, tableName } from "../lib/db.js";
 import { jsonResponse } from "../lib/response.js";
 import { isCreateHighscoreInput } from "../lib/validation.js";
-import { isAdmin } from "../lib/auth.js";
+import { getAdminUsername, isAdmin } from "../lib/auth.js";
 
 export async function handler(event: APIGatewayProxyEventV2WithJWTAuthorizer) {
   if (!isAdmin(event)) {
@@ -28,13 +28,20 @@ export async function handler(event: APIGatewayProxyEventV2WithJWTAuthorizer) {
     return jsonResponse(422, { message: "Invalid payload" });
   }
 
+  const adminUsername = getAdminUsername(event);
+  if (!adminUsername) {
+    return jsonResponse(403, { message: "Missing admin identity" });
+  }
+
   const item: HighscoreRecord = {
     id: randomUUID(),
     pseudonym: parsed.pseudonym.trim(),
     time_seconds: Number(parsed.time_seconds.toFixed(3)),
     category: parsed.category,
     festival_day: parsed.festival_day,
-    created_at: new Date().toISOString()
+    achieved_at: new Date(parsed.achieved_at).toISOString(),
+    created_at: new Date().toISOString(),
+    created_by: adminUsername
   };
 
   try {

@@ -3,9 +3,10 @@ import "../styles/global.css";
 
 interface Props {
   title: string;
+  description?: string;
 }
 
-const { title } = Astro.props;
+const { title, description = "Festival-Highscores auf trichter.me" } = Astro.props;
 ---
 
 <!doctype html>
@@ -13,6 +14,8 @@ const { title } = Astro.props;
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#030817" />
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
   </head>

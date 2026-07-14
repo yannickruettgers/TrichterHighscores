@@ -10,6 +10,7 @@ export function isCreateHighscoreInput(value: unknown): value is CreateHighscore
   const timeValue = body.time_seconds;
   const category = body.category;
   const festivalDay = body.festival_day;
+  const achievedAt = body.achieved_at;
 
   if (typeof pseudonym !== "string" || pseudonym.trim().length < 2 || pseudonym.trim().length > 32) {
     return false;
@@ -28,6 +29,14 @@ export function isCreateHighscoreInput(value: unknown): value is CreateHighscore
   }
 
   if (!FESTIVAL_DAYS.includes(festivalDay as (typeof FESTIVAL_DAYS)[number])) {
+    return false;
+  }
+
+  if (
+    typeof achievedAt !== "string"
+    || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2})$/.test(achievedAt)
+    || !Number.isFinite(Date.parse(achievedAt))
+  ) {
     return false;
   }
 

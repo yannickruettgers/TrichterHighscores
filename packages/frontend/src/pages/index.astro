@@ -2,117 +2,91 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 ---
 
-<BaseLayout title="trichter.me - Parookaville Edition">
-  <main
-    class="board-page"
-    x-data="leaderboardApp()"
-    x-init="load()"
-  >
-    <section class="board-header">
+<BaseLayout title="trichter.me - Parookaville Leaderboard">
+  <main class="board-page" x-data="leaderboardApp()" x-init="load()">
+    <div class="neon-splash" aria-hidden="true"></div>
+
+    <header class="board-header">
       <div class="brand-lockup">
         <div class="brand-logo-shell">
-          <img
-            class="brand-logo"
-            src="/branding/logo-mascot.svg"
-            alt="trichter.me Logo und Maskottchen"
-          />
+          <img class="brand-logo" src="/branding/logo-mascot.svg" alt="trichter.me Maskottchen" />
         </div>
         <div>
           <p class="eyebrow">Parookaville</p>
           <h1>Leaderboard</h1>
         </div>
       </div>
-    </section>
+      <a class="button-link button-primary" href="/admin">Admin</a>
+    </header>
 
-    <section class="leaderboard-shell panel" id="leaderboard">
+    <section class="leaderboard-shell panel" id="leaderboard" aria-labelledby="leaderboard-title">
+      <h2 id="leaderboard-title" class="sr-only">Highscore-Auswahl</h2>
       <div class="filter-layout">
-        <div class="filter-block">
-          <span class="filter-label">Kategorie</span>
+        <fieldset class="filter-block">
+          <legend class="filter-label">Kategorie</legend>
           <div class="toggle-row toggle-pills">
             <template x-for="categoryOption in categories" :key="categoryOption">
-              <button
-                type="button"
-                :class="selectedCategory === categoryOption ? 'active' : ''"
-                @click="selectedCategory = categoryOption"
-                x-text="categoryOption"
-              ></button>
+              <button type="button" :class="selectedCategory === categoryOption ? 'active' : ''" :aria-pressed="selectedCategory === categoryOption" @click="selectedCategory = categoryOption" x-text="categoryOption"></button>
             </template>
           </div>
-        </div>
+        </fieldset>
 
-        <div class="filter-block">
-          <span class="filter-label">Wertung</span>
+        <fieldset class="filter-block">
+          <legend class="filter-label">Wertung</legend>
           <div class="toggle-row toggle-pills secondary-pills">
-            <button
-              type="button"
-              :class="selectedDay === 'overall' ? 'active' : ''"
-              @click="selectedDay = 'overall'"
-            >
-              Overall Festival
-            </button>
+            <button type="button" :class="selectedDay === 'overall' ? 'active' : ''" :aria-pressed="selectedDay === 'overall'" @click="selectedDay = 'overall'">Gesamtes Festival</button>
             <template x-for="day in festivalDays" :key="day">
-              <button
-                type="button"
-                :class="selectedDay === day ? 'active' : ''"
-                @click="selectedDay = day"
-                x-text="day"
-              ></button>
+              <button type="button" :class="selectedDay === day ? 'active' : ''" :aria-pressed="selectedDay === day" @click="selectedDay = day" x-text="dayLabel(day)"></button>
             </template>
           </div>
-        </div>
+        </fieldset>
       </div>
 
-      <template x-if="loading">
-        <div class="status-card">
-          <strong>Highscores werden geladen...</strong>
-          <p>Die aktuelle Wertung wird frisch aus der API gezogen.</p>
-        </div>
-      </template>
+      <div class="status-card" x-show="loading" role="status">
+        <strong>Highscores werden geladen...</strong>
+        <p>Die aktuelle Wertung wird frisch aus der API gezogen.</p>
+      </div>
+      <div class="status-card error-card" x-show="error" role="alert">
+        <strong>Leaderboard gerade nicht erreichbar</strong>
+        <p x-text="error"></p>
+      </div>
+      <div class="status-card empty-card" x-show="!loading && !error && visibleRows().length === 0">
+        <strong>Noch kein Eintrag in dieser Sicht</strong>
+        <p>Wechsle den Tag oder die Kategorie, um andere Festivalzeiten anzuzeigen.</p>
+      </div>
 
-      <template x-if="error">
-        <div class="status-card error-card">
-          <strong>Leaderboard gerade nicht erreichbar</strong>
-          <p x-text="error"></p>
+      <section class="podium-section" x-show="!loading && !error && topThree().length > 0" aria-labelledby="podium-title">
+        <h2 id="podium-title" class="section-title">Podium</h2>
+        <div class="podium-grid">
+          <template x-for="(entry, index) in topThree()" :key="entry.id">
+            <article class="podium-card" :class="`podium-rank-${index + 1}`">
+              <span class="podium-rank" x-text="`#${index + 1}`"></span>
+              <img class="podium-avatar" :src="avatarUrl(entry.pseudonym)" :alt="`Avatar von ${entry.pseudonym}`" />
+              <strong x-text="entry.pseudonym"></strong>
+              <p x-text="dayLabel(entry.festival_day)"></p>
+              <span class="podium-time" x-text="`${entry.time_seconds.toFixed(3)}s`"></span>
+            </article>
+          </template>
         </div>
-      </template>
-
-      <template x-if="!loading && !error && visibleRows().length === 0">
-        <div class="status-card empty-card">
-          <strong>Noch kein Eintrag in dieser Sicht</strong>
-          <p>Wechsle den Tag oder die Kategorie, um andere Festivalzeiten anzuzeigen.</p>
-        </div>
-      </template>
-
-      <section class="podium-section" x-show="!loading && !error && topThree().length > 0">
-        <template x-if="topThree().length > 0">
-          <div class="podium-grid">
-            <template x-for="entry in podiumOrder()" :key="entry.id">
-              <article class="podium-card" :class="podiumClass(entry.id)">
-                <span class="podium-rank" x-text="podiumLabel(entry.id)"></span>
-                <img class="podium-avatar" :src="avatarUrl(entry.pseudonym)" alt="Avatar" />
-                <strong x-text="entry.pseudonym"></strong>
-                <p x-text="entry.festival_day"></p>
-                <span class="podium-time" x-text="`${entry.time_seconds.toFixed(3)}s`"></span>
-              </article>
-            </template>
-          </div>
-        </template>
       </section>
 
-      <section class="list-section" x-show="!loading && !error && visibleRows().length > 0">
+      <section class="list-section" x-show="!loading && !error && visibleRows().length > 0" aria-labelledby="all-ranks-title">
         <div class="list-head">
-          <h2>Alle Platzierungen</h2>
+          <div>
+            <p class="eyebrow">Jeder Versuch zählt</p>
+            <h2 id="all-ranks-title">Alle Platzierungen</h2>
+          </div>
+          <p x-text="`${visibleRows().length} Ergebnisse`"></p>
         </div>
-
         <div class="leaderboard-list">
           <template x-for="(entry, idx) in visibleRows()" :key="entry.id">
             <article class="leaderboard-row">
               <span class="rank-badge" x-text="`#${idx + 1}`"></span>
-              <img class="avatar" :src="avatarUrl(entry.pseudonym)" alt="Avatar" />
+              <img class="avatar" :src="avatarUrl(entry.pseudonym)" :alt="`Avatar von ${entry.pseudonym}`" />
               <div class="row-copy">
                 <div class="row-headline">
                   <strong x-text="entry.pseudonym"></strong>
-                  <span class="day-chip" x-text="entry.festival_day"></span>
+                  <span class="day-chip" x-text="dayLabel(entry.festival_day)"></span>
                 </div>
                 <p x-text="`${entry.category} Kategorie`"></p>
               </div>
@@ -123,18 +97,30 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       </section>
     </section>
 
+    <aside class="beer-card panel" aria-labelledby="beer-title">
+      <div>
+        <p class="eyebrow">Support the Harbor</p>
+        <h2 id="beer-title">Buy me a beer</h2>
+        <p>Wenn dir das Leaderboard gefällt, geht das nächste Festivalbier auf dich.</p>
+      </div>
+      <a class="button-link button-primary" href="https://www.paypal.me/yannickruettgers" target="_blank" rel="noopener noreferrer">Bier ausgeben</a>
+    </aside>
+
     <footer class="legal">
       <nav class="legal-links" aria-label="Rechtliches">
         <a href="/impressum">Impressum</a>
         <a href="/datenschutz">Datenschutz</a>
       </nav>
+      <p>Neon Harbor · Parookaville Edition</p>
     </footer>
   </main>
 
   <script type="module">
     import Alpine from "alpinejs";
+    import { filterHighscores, uniquePodium } from "../lib/leaderboard";
 
     const API_BASE_URL = import.meta.env.PUBLIC_API_BASE_URL ?? "https://api.trichter.me";
+    const DAY_LABELS = { Wednesday: "Mittwoch", Thursday: "Donnerstag", Friday: "Freitag", Saturday: "Samstag", Sunday: "Sonntag" };
 
     window.leaderboardApp = function leaderboardApp() {
       return {
@@ -145,74 +131,29 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         festivalDays: ["Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
         selectedCategory: "0.33l",
         selectedDay: "overall",
-
         async load() {
           this.loading = true;
           this.error = "";
-
           try {
             const response = await fetch(`${API_BASE_URL}/api/highscores`);
-            if (!response.ok) {
-              throw new Error("Highscores konnten nicht geladen werden");
-            }
-
+            if (!response.ok) throw new Error("Highscores konnten nicht geladen werden");
             const data = await response.json();
             this.rows = data.highscores ?? [];
-          } catch (err) {
-            this.error = err instanceof Error ? err.message : "Unbekannter Fehler";
+          } catch (error) {
+            this.error = error instanceof Error ? error.message : "Unbekannter Fehler";
           } finally {
             this.loading = false;
           }
         },
-
         visibleRows() {
-          return this.rows.filter((entry) => {
-            const categoryMatch = entry.category === this.selectedCategory;
-            const dayMatch = this.selectedDay === "overall" ? true : entry.festival_day === this.selectedDay;
-            return categoryMatch && dayMatch;
-          });
+          return filterHighscores(this.rows, this.selectedCategory, this.selectedDay);
         },
-
         topThree() {
-          return this.visibleRows().slice(0, 3);
+          return uniquePodium(this.visibleRows());
         },
-
-        remainingRows() {
-          return this.visibleRows().slice(3);
+        dayLabel(day) {
+          return DAY_LABELS[day] ?? day;
         },
-
-        podiumOrder() {
-          const top = this.topThree();
-          if (top.length === 1) {
-            return [top[0]];
-          }
-          if (top.length === 2) {
-            return [top[1], top[0]];
-          }
-
-          return [top[1], top[0], top[2]];
-        },
-
-        podiumLabel(id) {
-          const index = this.topThree().findIndex((entry) => entry.id === id);
-          return `#${index + 1}`;
-        },
-
-        podiumClass(id) {
-          const index = this.topThree().findIndex((entry) => entry.id === id);
-          if (index === 0) {
-            return "champion";
-          }
-          if (index === 1) {
-            return "runner-up";
-          }
-          return "third-place";
-        },
-
-        selectedDayLabel() {
-          return this.selectedDay === "overall" ? "Overall Festival" : this.selectedDay;
-        },
-
         avatarUrl(seed) {
           return `https://api.dicebear.com/10.x/fun-emoji/svg?seed=${encodeURIComponent(seed)}`;
         }

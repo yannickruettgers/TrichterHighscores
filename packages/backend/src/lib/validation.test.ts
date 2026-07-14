@@ -8,7 +8,8 @@ describe("isCreateHighscoreInput", () => {
         pseudonym: "FunnelFox",
         time_seconds: 1.634,
         category: "0.5l",
-        festival_day: "Friday"
+        festival_day: "Friday",
+        achieved_at: "2026-07-24T18:30:00.000Z"
       })
     ).toBe(true);
   });
@@ -19,7 +20,8 @@ describe("isCreateHighscoreInput", () => {
         pseudonym: "PrecisionFail",
         time_seconds: 1.6345,
         category: "0.5l",
-        festival_day: "Friday"
+        festival_day: "Friday",
+        achieved_at: "2026-07-24T18:30:00.000Z"
       })
     ).toBe(false);
   });
@@ -30,7 +32,8 @@ describe("isCreateHighscoreInput", () => {
         pseudonym: "TooFast",
         time_seconds: 0,
         category: "0.33l",
-        festival_day: "Wednesday"
+        festival_day: "Wednesday",
+        achieved_at: "2026-07-22T18:30:00.000Z"
       })
     ).toBe(false);
   });
@@ -41,7 +44,25 @@ describe("isCreateHighscoreInput", () => {
         pseudonym: "WrongCategory",
         time_seconds: 2.111,
         category: "2.0l",
-        festival_day: "Sunday"
+        festival_day: "Sunday",
+        achieved_at: "2026-07-26T18:30:00.000Z"
+      })
+    ).toBe(false);
+  });
+
+  it.each([
+    undefined,
+    "2026-07-24 18:30",
+    "2026-13-24T18:30:00Z",
+    "not-a-date"
+  ])("rejects invalid achieved_at values", (achieved_at) => {
+    expect(
+      isCreateHighscoreInput({
+        pseudonym: "TimeTraveller",
+        time_seconds: 2.111,
+        category: "1.0l",
+        festival_day: "Friday",
+        achieved_at
       })
     ).toBe(false);
   });

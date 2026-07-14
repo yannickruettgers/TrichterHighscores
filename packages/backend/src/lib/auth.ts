@@ -25,3 +25,13 @@ export function isAdmin(event: APIGatewayProxyEventV2WithJWTAuthorizer): boolean
 
   return false;
 }
+
+/** Returns the stable Cognito username used for score audit attribution. */
+export function getAdminUsername(event: APIGatewayProxyEventV2WithJWTAuthorizer): string | undefined {
+  const claims = event.requestContext.authorizer?.jwt?.claims;
+  // The browser sends an OAuth access token, where Cognito exposes `username`.
+  // Keep the ID-token claim as a compatibility fallback for direct integrations.
+  const username = [claims?.username, claims?.["cognito:username"]]
+    .find((claim): claim is string => typeof claim === "string" && Boolean(claim.trim()));
+  return username?.trim();
+}

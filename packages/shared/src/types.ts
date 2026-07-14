@@ -16,7 +16,9 @@ export interface HighscoreRecord {
   time_seconds: number;
   category: Category;
   festival_day: FestivalDay;
+  achieved_at?: string;
   created_at: string;
+  created_by?: string;
 }
 
 export interface CreateHighscoreInput {
@@ -24,4 +26,5 @@ export interface CreateHighscoreInput {
   time_seconds: number;
   category: Category;
   festival_day: FestivalDay;
+  achieved_at: string;
 }

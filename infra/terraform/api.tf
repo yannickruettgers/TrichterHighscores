@@ -278,11 +278,20 @@ resource "aws_apigatewayv2_integration" "delete_highscore" {
   payload_format_version = "2.0"
 }
 
-# Routes: GET is public, POST/DELETE require a valid Cognito JWT.
+# Routes: the leaderboard GET is public; admin GET, POST and DELETE require a valid Cognito JWT.
+# The admin GET reuses the public read Lambda; it also checks the admin group based on its raw path.
 resource "aws_apigatewayv2_route" "get_highscores" {
   api_id    = aws_apigatewayv2_api.http.id
   route_key = "GET /api/highscores"
   target    = "integrations/${aws_apigatewayv2_integration.get_highscores.id}"
+}
+
+resource "aws_apigatewayv2_route" "get_admin_highscores" {
+  api_id             = aws_apigatewayv2_api.http.id
+  route_key          = "GET /api/admin/highscores"
+  target             = "integrations/${aws_apigatewayv2_integration.get_highscores.id}"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
 }
 
 resource "aws_apigatewayv2_route" "post_highscore" {

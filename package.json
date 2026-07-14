@@ -10,7 +10,7 @@
     "build:frontend": "npm --workspace @trichter/frontend run build",
     "build:backend": "npm --workspace @trichter/backend run build",
     "typecheck": "npm --workspace @trichter/backend run typecheck",
-    "test": "npm --workspace @trichter/backend run test",
+    "test": "npm --workspace @trichter/backend run test && npm --workspace @trichter/frontend run test",
     "lint": "echo \"Linting not configured yet\""
   },
   "engines": {

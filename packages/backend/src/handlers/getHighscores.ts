@@ -1,4 +1,4 @@
-import type { APIGatewayProxyEventV2 } from "aws-lambda";
+import type { APIGatewayProxyEventV2, APIGatewayProxyEventV2WithJWTAuthorizer } from "aws-lambda";
 import { ScanCommand } from "@aws-sdk/lib-dynamodb";
 import {
   CATEGORIES,
@@ -10,8 +10,14 @@ import {
 import { dynamo, tableName } from "../lib/db.js";
 import { jsonResponse } from "../lib/response.js";
 import { sortHighscores } from "../lib/sort.js";
+import { isAdmin } from "../lib/auth.js";
 
-export async function handler(event: APIGatewayProxyEventV2) {
+export async function handler(event: APIGatewayProxyEventV2 | APIGatewayProxyEventV2WithJWTAuthorizer) {
+  const isAdminView = event.rawPath === "/api/admin/highscores";
+  if (isAdminView && !isAdmin(event as APIGatewayProxyEventV2WithJWTAuthorizer)) {
+    return jsonResponse(403, { message: "Forbidden" });
+  }
+
   const requestedCategory = event.queryStringParameters?.category as Category | undefined;
   const requestedFestivalDay = event.queryStringParameters?.festival_day as FestivalDay | "overall" | undefined;
 
@@ -42,9 +48,19 @@ export async function handler(event: APIGatewayProxyEventV2) {
 
     const sorted = sortHighscores(filtered);
 
-    return jsonResponse(200, {
-      highscores: sorted
-    });
+    const highscores = isAdminView
+      ? sorted
+      : sorted.map((record) => ({
+        id: record.id,
+        pseudonym: record.pseudonym,
+        time_seconds: record.time_seconds,
+        category: record.category,
+        festival_day: record.festival_day,
+        achieved_at: record.achieved_at,
+        created_at: record.created_at
+      }));
+
+    return jsonResponse(200, { highscores });
   } catch {
     return jsonResponse(500, { message: "Failed to load highscores" });
   }

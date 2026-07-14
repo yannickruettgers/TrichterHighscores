@@ -15,26 +15,27 @@
 
 * { box-sizing: border-box; }
 [x-cloak] { display: none !important; }
-html { background: var(--bg); }
-body {
-  margin: 0;
-  min-height: 100vh;
-  overflow-x: hidden;
-  font-family: "Avenir Next", "Trebuchet MS", "Segoe UI", sans-serif;
-  color: var(--text);
+html {
+  width: 100%;
+  min-width: 100%;
+  min-height: 100%;
+  overflow-x: clip;
   background:
+    url("/branding/bathymetry.svg") center top / 720px 480px repeat,
     radial-gradient(circle at 16% 5%, rgba(255, 22, 136, 0.15), transparent 26rem),
     radial-gradient(circle at 88% 30%, rgba(35, 115, 255, 0.12), transparent 30rem),
     linear-gradient(155deg, var(--bg) 0%, var(--bg-alt) 58%, #020611 100%);
 }
-body::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background: url("/branding/bathymetry.svg") center top / 720px 480px repeat;
-  opacity: 0.72;
+body {
+  width: 100%;
+  min-width: 100%;
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: clip;
+  font-family: "Avenir Next", "Trebuchet MS", "Segoe UI", sans-serif;
+  color: var(--text);
+  background: transparent;
 }
 
 main {
@@ -311,7 +312,7 @@ input, select {
 }
 
 @media (max-width: 640px) {
-  main { padding: .9rem .75rem 3rem; }
+  main { max-width: none; padding: .9rem .75rem 3rem; }
   .board-header { min-height: 82px; align-items: flex-start; }
   .brand-lockup { gap: .65rem; }
   .brand-logo-shell, .brand-logo-shell-small { width: 68px; height: 68px; }

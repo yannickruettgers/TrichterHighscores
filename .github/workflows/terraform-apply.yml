@@ -120,6 +120,7 @@ jobs:
         with:
           name: terraform-apply-build-artifacts
           path: infra/terraform/.build
+          include-hidden-files: true
           if-no-files-found: error
 
   terraform-apply:

@@ -264,71 +264,59 @@ resource "aws_iam_role" "github_actions_deploy" {
 resource "aws_iam_policy" "deploy_policy" {
   name = "${local.prefix}-deploy-policy"
 
+  # This role is trusted only by the configured GitHub repository through OIDC.
+  # IAM access is deliberately read-only so this role cannot modify its own IAM
+  # policy, trust relationship, or role permissions. The only IAM write-like
+  # action is a restricted PassRole permission needed when Lambda is created or
+  # its execution role is assigned.
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
         Effect = "Allow"
         Action = [
-          "s3:*"
-        ]
-        Resource = [
-          aws_s3_bucket.frontend.arn,
-          "${aws_s3_bucket.frontend.arn}/*"
-        ]
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:*"
-        ]
-        Resource = [
-          "arn:aws:s3:::trichter-me-terraform-state-${data.aws_caller_identity.current.account_id}",
-          "arn:aws:s3:::trichter-me-terraform-state-${data.aws_caller_identity.current.account_id}/*"
-        ]
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "dynamodb:*"
-        ]
-        Resource = [
-          "arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.current.account_id}:table/trichter-me-terraform-locks",
-          aws_dynamodb_table.highscores.arn
-        ]
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "cloudfront:*"
-        ]
-        Resource = "*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
+          "s3:*",
+          "dynamodb:*",
+          "cloudfront:*",
           "lambda:*",
           "apigateway:*",
           "route53:*",
           "cognito-idp:*",
           "acm:*",
-          "logs:*"
-        ]
-        Resource = "*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "iam:*"
-        ]
-        Resource = "*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
+          "logs:*",
           "sts:GetCallerIdentity"
         ]
         Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "iam:Get*",
+          "iam:List*"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "tag:Get*"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "iam:PassRole"
+        ]
+        Resource = [
+          aws_iam_role.lambda_read.arn,
+          aws_iam_role.lambda_write.arn
+        ]
+        Condition = {
+          StringEquals = {
+            "iam:PassedToService" = "lambda.amazonaws.com"
+          }
+        }
       }
     ]
   })

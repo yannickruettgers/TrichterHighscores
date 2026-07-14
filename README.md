@@ -5,7 +5,7 @@ Serverless festival highscore app for Parookaville.
 ## Current Status
 
 - Monorepo base structure for frontend, backend, and Terraform has been created.
-- Astro + Alpine frontend uses the static "Neon Harbor" design, a compact mobile leaderboard, and a visible link to the protected admin route.
+- Astro + Alpine frontend uses a festival-inspired design, a compact mobile leaderboard, and a visible link to the protected admin route.
 - Lambda handlers serve public `GET /api/highscores`, protected `GET /api/admin/highscores`, `POST /api/highscores`, and `DELETE /api/highscores/{id}` routes and are bundled with esbuild.
 - Terraform provisions S3, CloudFront, Route53, ACM, DynamoDB, Cognito, GitHub OIDC, plus an HTTP API with Lambda integrations, a Cognito JWT authorizer, and the public API domain `api.trichter.me`.
 - GitHub Actions deploy workflow validates backend types/tests, validates Terraform, and deploys the frontend to S3 + CloudFront invalidation.

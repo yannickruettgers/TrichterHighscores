@@ -26,6 +26,18 @@ describe("isCreateHighscoreInput", () => {
     ).toBe(false);
   });
 
+  it.each([1.001, 1.003, 2.002, 5.007])("accepts time values that are valid but tricky for floating-point (%s)", (timeSeconds) => {
+    expect(
+      isCreateHighscoreInput({
+        pseudonym: "FunnelFox",
+        time_seconds: timeSeconds,
+        category: "1.0l",
+        festival_day: "Friday",
+        achieved_at: "2026-07-24T18:30:00.000Z"
+      })
+    ).toBe(true);
+  });
+
   it("rejects non-positive times", () => {
     expect(
       isCreateHighscoreInput({

@@ -20,7 +20,7 @@ export function isCreateHighscoreInput(value: unknown): value is CreateHighscore
     return false;
   }
 
-  if (!Number.isInteger(timeValue * 1000)) {
+  if (parseFloat(timeValue.toFixed(3)) !== timeValue) {
     return false;
   }
 

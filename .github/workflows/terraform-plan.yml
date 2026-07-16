@@ -5,6 +5,10 @@ on:
     paths:
       - infra/terraform/**
       - .github/workflows/terraform-*.yml
+      - packages/backend/**
+      - packages/shared/**
+      - package.json
+      - package-lock.json
 
 permissions:
   id-token: write

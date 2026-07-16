@@ -20,7 +20,8 @@ export function isCreateHighscoreInput(value: unknown): value is CreateHighscore
     return false;
   }
 
-  if (!Number.isInteger(timeValue * 1000)) {
+  const roundedTime = Math.round(timeValue * 1000) / 1000;
+  if (Math.abs(timeValue - roundedTime) > Number.EPSILON * Math.max(1, Math.abs(timeValue))) {
     return false;
   }
 

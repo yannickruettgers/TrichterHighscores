@@ -14,6 +14,18 @@ describe("isCreateHighscoreInput", () => {
     ).toBe(true);
   });
 
+  it("accepts millisecond values affected by floating-point rounding", () => {
+    expect(
+      isCreateHighscoreInput({
+        pseudonym: "FunnelFox",
+        time_seconds: 1.001,
+        category: "1.0l",
+        festival_day: "Friday",
+        achieved_at: "2026-07-24T18:30:00.000Z"
+      })
+    ).toBe(true);
+  });
+
   it("rejects values with more than three decimal places", () => {
     expect(
       isCreateHighscoreInput({

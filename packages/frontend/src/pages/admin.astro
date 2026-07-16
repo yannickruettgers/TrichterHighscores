@@ -55,7 +55,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
           </div>
           <div class="form-field">
             <label for="score-time">Zeit in Sekunden</label>
-            <input id="score-time" type="number" x-model.number="form.time_seconds" step="0.001" min="0.001" inputmode="decimal" placeholder="1.234" required />
+            <input id="score-time" type="text" x-model="form.time_seconds" inputmode="decimal" placeholder="1,234" required />
           </div>
           <div class="form-field">
             <label for="category">Kategorie</label>
@@ -122,6 +122,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     import Alpine from "alpinejs";
     import { berlinDateTimeLocalToIso, festivalDayForLocalDateTime, formatBerlinDateTimeLocal, moveLocalDateTimeToFestivalDay } from "../lib/berlinTime";
     import { exchangeCodeForToken, readCognitoCallback } from "../lib/cognitoAuth";
+    import { parseTimeSeconds } from "../lib/time";
 
     const API_BASE_URL = import.meta.env.PUBLIC_API_BASE_URL ?? "https://api.trichter.me";
     const COGNITO_DOMAIN = import.meta.env.PUBLIC_COGNITO_DOMAIN ?? "";
@@ -276,6 +277,11 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         },
 
         async createEntry() {
+          const timeSeconds = parseTimeSeconds(this.form.time_seconds);
+          if (timeSeconds === null) {
+            this.setStatus("Bitte eine gueltige Zeit in Sekunden eingeben.", true);
+            return;
+          }
           const festivalDay = festivalDayForLocalDateTime(this.form.achieved_local);
           if (!festivalDay || festivalDay !== this.form.festival_day) {
             this.setStatus("Festivaltag und Erzielungsdatum stimmen nicht überein.", true);
@@ -292,7 +298,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
             const response = await fetch(`${API_BASE_URL}/api/highscores`, {
               method: "POST",
               headers: { "Content-Type": "application/json", Authorization: `Bearer ${this.accessToken}` },
-              body: JSON.stringify({ pseudonym: this.form.pseudonym, time_seconds: Number(this.form.time_seconds), category: this.form.category, festival_day: this.form.festival_day, achieved_at: achievedAt })
+              body: JSON.stringify({ pseudonym: this.form.pseudonym, time_seconds: timeSeconds, category: this.form.category, festival_day: this.form.festival_day, achieved_at: achievedAt })
             });
             if (response.status === 401 || response.status === 403) {
               this.logout();
